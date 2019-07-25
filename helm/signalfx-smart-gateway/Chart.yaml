@@ -1,0 +1,30 @@
+apiVersion: v1
+appVersion: 2.0 # The minimum version of the SignalFx Smart Gateway that this helm chart is compatibile with
+description: "The Smart Gateway is a key component in your deployment of SignalFx Microservices APM: 
+  it receives all the distributed traces from your instrumented applications, generates metrics for 
+  each unique span and trace path, and selects the interesting, erroneous or outlier traces to forward 
+  to SignalFx. It is designed to run within your environment, close to your application, and operate 
+  reliably and at scale."
+name: signalfx-smart-gateway
+version: 0.1.0 # The version of this helm chart
+keywords:
+- tracing
+- monitoring
+- alerting
+- metrics
+- stats
+home: https://signalfx.com
+sources:
+- https://github.com/signalfx/gateway
+- https://docs.signalfx.com
+- https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html
+maintainers:
+- name: charliesignalfx
+  email: charlie@signalfx.com
+- name: mdubbyap
+  email: mwp@signalfx.com
+- name: sstewart-signalfx
+  email: sstewart@signalfx.com
+- name: keitwb
+  email: bkeith@signalfx.com
+icon: https://signalfx-82c9.kxcdn.com/wp-content/uploads/2015/12/signalfx-main-logo1.png

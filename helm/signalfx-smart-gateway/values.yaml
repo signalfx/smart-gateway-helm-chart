@@ -1,0 +1,239 @@
+# Default values for signalfx-smart-gateway.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# nameOverride -- overrides the name of the helm chart
+nameOverride: ""
+# fullnameOverride -- overrides the full name of the helm chart
+fullnameOverride: ""
+
+# image -- configurations for the deployed docker image
+image:
+  # image.pullPolicy -- defines when to pull the image
+  pullPolicy: IfNotPresent
+  # image.repository -- the container image to pull
+  repository: signalfx-smart-gateway
+  # image.tag -- the container image tag to pull (REQUIRED)
+  tag: ""
+  # image.pullSecrets -- the image pull secrets of kubernetes secrets to use when pulling images  (REQUIRED)
+  pullSecrets:
+    - name: ""
+
+# signalFxAccessToken -- access token for SignalFx.  (REQUIRED)
+signalFxAccessToken: ""
+
+# clusterName -- the name of the cluster (REQUIRED)
+clusterName: ""
+
+# targetClusterAddresses -- a list of etcd client addresses to connect to (REQUIRED)
+targetClusterAddresses:
+  - etcd-cluster-client:2379
+
+# listeners -- SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists.
+listeners: [
+  {
+      # gateway.conf.ListenFrom[0].Name -- the name of the SignalFx Listener
+      "Name": "signalfxlistener",
+      # gateway.conf.ListenFrom[0].Type -- the type of the SignalFxListener
+      "Type": "signalfx",
+      # gateway.conf.ListenFrom[0].ListenAddr -- the address for the SignalFx Listener to listen on
+      "ListenAddr": "0.0.0.0:18080",
+      # gateway.conf.ListenFrom[0].RemoveSpanTags -- the list of span tags for the SignalFx Listener to remove
+      "RemoveSpanTags": [
+          {
+              "Service": "auth*",
+              "Tags": ["password"]
+          }
+      ]
+  }
+]
+
+# forwarders -- additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo and distributor.conf.ForwardTo lists.
+forwarders: []
+
+# gateway -- configurations for gateway nodes
+gateway:
+  # gateway.count -- number of gateway pods to deploy
+  count: 1
+  # gateway.advertisedSFXListenerAddress is an environment variable that will be set in
+  # the gateway pod.  It is used to configure SignalFx Smart Samplers to advertise
+  # their configured SignalFx Listener in the cluster.
+  # By defaul it is set to the $(POD_IP):<PORT> where this
+  # config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  advertisedSFXListenerAddress: $(POD_IP):18080
+  # gateway.advertisedSFXRebalanceAddress is an environment variable that will be set in
+  # the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise
+  # their configured RebalanceAddress in the cluister.  By defaul it is set to the 
+  # $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  advertisedSFXRebalanceAddress: $(POD_IP):2382
+  # gateway.conf represents the SignalFx Smart Gateway's config file.  You can directly set additional configurations `--set gateway.conf.<GATEAY CONFIG KEY>=`
+  conf: 
+    # gateway.conf.LogDir -- the directory to log to.  A value of "-" will log to stdout
+    LogDir: "-"
+    # gateway.conf.ClusterOperation -- the cluster operation the gateway should
+    ClusterOperation: "client"
+    # gateawy.conf.TargetClusterAddresses -- a list of etcd client addresses to connect to
+    TargetClusterAddresses: []
+    # gateway.conf.ListenFrom -- the gateway listeners.  This list is merged with the listeners list.
+    ListenFrom: []
+    # gateway.conf.ForwardTo -- the gateway forwarders.  This list is merged with the forwarders list.
+    ForwardTo: [
+      {
+        "Name": "signalfxforwarder",
+        "Type": "signalfx",
+        "AuthTokenEnvVar": "SFX_AUTH_TOKEN",
+        "BufferSize": 1000000,
+        "DrainingThreads": 50,
+        "MaxDrainSize": 5000,
+        "TraceSample": {
+          "ListenRebalanceAddress": "0.0.0.0:2382"
+        }
+      }
+    ]
+  # gateway.containerPorts -- a list of kubernetes container port definitions apply to the container
+  containerPorts:
+    # gateway.containerPorts[0].name -- the name of the SignalFx Listener containerPort
+  - name: sfx-listener
+    # gateway.containerPorts[0].containerPort -- the container port of the SignalFx Listener
+    containerPort: 18080
+    # gateway.containerPorts[0].protocol -- the protocol of the SignalFx Listener
+    protocol: TCP
+    # gateway.containerPorts[1].name -- the name of the SignalFx Forwarder's rebalance containerPort
+  - name: sfx-rebalance
+    # gateway.containerPorts[1].containerPort -- the container port of the SignalFx Forwarder's rebalance server
+    containerPort: 2382
+    # gateway.containerPorts[1].protocol -- the protocol of the SignalFx Forwarder's rebalance server
+    protocol: TCP
+  # gateway.livenessProbe -- a kubernetes liveness probe to determine the health of the container
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: sfx-listener
+    initialDelaySeconds: 15
+  # gateway.readinessProbe -- a kubernetes readiness probe to determine when the container is ready
+  readinessProbe: {}
+  # gateway.resources -- kubernetes deployment resources
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  # gateway.nodeSelector -- kubernetes node selectors to apply to the pod
+  nodeSelector: {}
+  # gateway.tolerations -- kubernetes deployment tolerations to apply to the pod
+  tolerations: []
+  # gateway.affinity -- kubernetes affinity configuriations to apply to the pod
+  affinity: {}
+  # gateway.volumes -- kubernetes volumes to apply to the pod
+  volumes: []
+  # gateway.volumeMounts -- kubernetes volume mounts to apply to the container
+  volumeMounts: []
+
+# distributor -- configurations for distributor nodes
+distributor:
+  # distributor.count -- number of gateway pods to deploy
+  count: 0
+  # distributor.advertisedSFXListenerAddress is an environment variable that will be set in
+  # the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise
+  # their configured SignalFx Listener in the cluster.
+  # By defaul it is set to the $(POD_IP):<PORT> where this
+  # config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  advertisedSFXListenerAddress: $(POD_IP):18080
+  # distributor.advertisedSFXRebalanceAddress is an environment variable that will be set in
+  # the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise
+  # their configured RebalanceAddress in the cluister.  By defaul it is set to the 
+  # $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  advertisedSFXRebalanceAddress: $(POD_IP):2382
+  # distributor.conf represents the SignalFx Smart Gateway's config file.
+  conf: 
+    # distributor.conf.LogDir -- the directory to log to.  A value of "-" will log to stdout
+    LogDir: "-"
+    # distributor.conf.ClusterOperation -- the cluster operation the gateway should
+    ClusterOperation: "client"
+    # distributor.conf.TargetClusterAddresses -- a list of etcd client addresses to connect to
+    TargetClusterAddresses: []
+    # distributor.conf.ListenFrom -- the gateway listeners.  This list is merged with the listeners list.
+    ListenFrom: []
+    # distributor.conf.ForwardTo -- the gateway forwarders.  This list is merged with the forwarders list.
+    ForwardTo: [
+      # distributor.conf.ForwardTo[0] -- the SignalFx Forwarder
+      {
+        "Name": "signalfxforwarder",
+        "Type": "signalfx",
+        "AuthTokenEnvVar": "SFX_AUTH_TOKEN",
+        "BufferSize": 1000000,
+        "DrainingThreads": 50,
+        "MaxDrainSize": 5000,
+        "TraceSample": {
+          "Distributor": true
+        }
+      }
+    ]
+  # distributor.containerPorts -- a list of kubernetes container port definitions apply to the container
+  containerPorts:
+    # distributor.containerPorts[0].name -- the name of the SignalFx Listener containerPort
+  - name: sfx-listener
+    # distributor.containerPorts[0].containerPort -- the container port of the SignalFx Listener
+    containerPort: 18080
+    # distributor.containerPorts[0].protocol -- the protocol of the SignalFx Listener
+    protocol: TCP
+    # distributor.containerPorts[1].name -- the name of the SignalFx Forwarder's rebalance containerPort
+  - name: sfx-rebalance
+    # distributor.containerPorts[1].containerPort -- the container port of the SignalFx Forwarder's rebalance server
+    containerPort: 2382
+    # distributor.containerPorts[1].protocol -- the protocol of the SignalFx Forwarder's rebalance server
+    protocol: TCP
+  # distributor.livenessProbe -- a kubernetes liveness probe to determine the health of the container
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: sfx-listener
+    initialDelaySeconds: 15
+  # distributor.readinessProbe -- a kubernetes readiness probe to determine when the container is ready
+  readinessProbe: {}
+  # distributor.resources -- kubernetes deployment resources
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  # distributor.nodeSelector -- kubernetes node selectors to apply to the pod
+  nodeSelector: {}
+  # distributor.tolerations -- kubernetes deployment tolerations to apply to the pod
+  tolerations: []
+  # distributor.affinity -- kubernetes affinity configuriations to apply to the pod
+  affinity: {}
+  # distributor.volumes -- kubernetes volumes to apply to the pod
+  volumes: []
+  # distributor.volumeMounts -- kubernetes volume mounts to apply to the container
+  volumeMounts: []
+
+# service -- configurations for the service exposeing the gateway's SignalFx listener
+service:
+  # service.type -- the type of service
+  type: ClusterIP
+  # service.ports -- the ports to configure on the service
+  ports:
+      # service.ports[0].port -- the port to use on the service
+    - port: 18080
+      # service.ports[0].targetPort -- the name of the container port to send requests to
+      targetPort: sfx-listener
+      # service.ports[0].protocol -- the protocol of the service
+      protocol: TCP
+      # service.ports[0].nameSuffix -- a suffix to apply to the port name
+      nameSuffix: sfx-listener
+
+ingress:
+  enabled: false
