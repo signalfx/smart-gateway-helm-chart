@@ -25,7 +25,7 @@ $ helm install \
 stable/etcd-operator
 ```
 
-- Update the chart to enable the cluster.  `cluster.enabled` is ignored on
+- Update the chart to enable the cluster. `cluster.enabled` is ignored on
 install.
 
 ```
@@ -60,7 +60,25 @@ $ helm repo update
 Then you can install the gateway using the chart name
 `signalfx/signalfx-smart-gateway`.
 
-Be sure to set values for:
+#### Installing a Single Instance
+
+For a single instance, be sure to set values for:
+- SignalFx Access Token  (`signalFxAccessToken`)
+- Cluster Name           (`clusterName`)
+- Image Repository       (`image.repository`)
+- Image Tag              (`image.tag`)
+
+```
+$ helm install signalfx/signalfx-smart-gateway \
+--set image.repository=<YOUR_SMART_GATEWAY_REPOSITORY> \
+--set image.tag=<YOUR_SMART_GATEWAY_TAG> \
+--set signalFxAccessToken=<YOUR_ACCESS_TOKEN> \
+--set clusterName=<YOUR_CLUSTER_NAME>
+```
+
+#### Installing A Cluster
+
+For a cluster, be sure to set values for:
 - SignalFx Access Token  (`signalFxAccessToken`)
 - Cluster Name           (`clusterName`)
 - Etcd Cluster Client Addresses (`targetClusterAddresses`)
@@ -85,22 +103,22 @@ gateways' or the distributors' SignalFx Listener.
 
 This chart deploys a cluster of SignalFx Smart Gateways and optionally deploys
 a SignalFx Smart Gateway Distributor layer in front of the SignalFx Smart
-Gateways.  This chart will also create a service definition in front of the
+Gateways. This chart will also create a service definition in front of the
 Smart Gateways or the Distributor layer.
 
 ### Important Configurations
 Before proceeding, it is recommended that you look at the [values.yaml] file
-included with the Helm chart.  There are two keys `gateway` and `distributor`
+included with the Helm chart. There are two keys `gateway` and `distributor`
 each represents specific configurations about the SignalFx Smart Gateways and
-the SignalFx Smart Gateway Distributors.  
+the SignalFx Smart Gateway Distributors.
 
 For convenience, there are a few top level configurations in the [values.yaml]
 to insert and configure Forwarders and Listeners for the Smart Gateway. 
 
 #### ClusterName
 The SignalFx Smart Gateway and SignalFx Smart Gateway Distributors must all use
-the same cluster name.  As a convenience there is a top level configuration
-called `clusterName`.  It will be inserted into `gateway.conf.ClusterName` and
+the same cluster name. As a convenience there is a top level configuration
+called `clusterName`. It will be inserted into `gateway.conf.ClusterName` and
 `distributor.conf.ClusterName`.
 
 #### Listeners
@@ -113,29 +131,33 @@ it is configured to listen on port `18080`. Please refer to the Listener
 
 #### Forwarders
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
-configuration JSON objects.  These forwarders will be merged into the
+configuration JSON objects. These forwarders will be merged into the
 [values.yaml] list `gateway.conf.ForwardTo` and `distributor.conf.ForwardTo`.
 Unlike `listeners`, there are default SignalFx Forwarder configurations stored
-in `gateway.conf.ForwardTo[0]` and `gateway.conf.ForwardTo[0]`.  This is because
+in `gateway.conf.ForwardTo[0]` and `gateway.conf.ForwardTo[0]`. This is because
 the forwarders are configured slightly differently between the gateway and
 distributor forwarders.
 
 #### Target Cluster Addresses
 The `targetClusterAddresses` configuration is a list of etcd client addresses
-for the gateways and distributors to connect to etcd.  This configuration is
+for the gateways and distributors to connect to etcd. This configuration is
 will be inserted into `gateway.conf.TargetClusterAddresses` and
 `distributor.conf.TargetClusterAddresses`.
 
 #### gateway.conf and distributor.conf
 You'll notice that there are configurations called `gateway.conf` and 
 `distributor.conf` they are JSON config objects representing plain SignalFx
-Smart Gateway config.  They are passed in directly and so additional gateway /
+Smart Gateway config. They are passed in directly and so additional gateway /
 distributor configurations that are not in the [values.yaml] can be set by
-directly specifying the path through these objects.  Please refer to the
+directly specifying the path through these objects. Please refer to the
 [SignalFx Smart Gateway Deployment Guide][6] for more information about
-configurations for the gateway.  Please note that `listeners`, `forwarders`, and
-`targetClusterAddresses` will be merged into their corresponding fields in 
-`gateway.conf` and `distributor.conf`.
+configurations for the gateway. Please note that `listeners` and `forwarders`
+will be merged into their corresponding fields in `gateway.conf` and 
+`distributor.conf`. `gateway.conf.TargetClusterAddresses` and 
+`gateway.conf.TargetClusterAddresses` are always overridden by 
+`targetClusterAddresses`. `gateway.conf.ClusterOperation` and 
+`distributor.conf.ClusterOperation` will always be ignored and set intelligently
+by the Helm chart.
 
 {{ template "chart.requirementsSection" . }}
 

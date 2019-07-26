@@ -16,23 +16,18 @@ data:
       {{ else }}
       "ClusterName": {{ toJson $.Values.clusterName}},
       {{- end }}
-      {{- range $k, $v := .conf}}{{ if not (eq $k "Listeners" "Forwarders" "TargetClusterAddresses" "ClusterName")}}
+      {{- range $k, $v := .conf}}{{ if not (eq $k "Listeners" "Forwarders" "TargetClusterAddresses" "ClusterName" "ClusterOperation")}}
       "{{ $k }}": {{ toJson $v }},
       {{- end }}{{ end }}
-      "TargetClusterAddresses": [
-        {{- if .conf.TargetClusterAddresses }}
-        {{- range $index, $addr := .conf.TargetClusterAddresses }}
-        {{- if $index}},{{- end }}
-        {{toJson $addr}}
-        {{- end }}
-        {{- end }}
-        {{- if $.Values.targetClusterAddresses }}
-        {{- range $index, $addr := $.Values.targetClusterAddresses}}
-        {{- if $index}},{{- end }}
-        {{toJson $addr}}
-        {{- end }}
-        {{- end }}
-      ],
+      {{- if (or (and (eq $key "gateway") (gt (int .count) 1)) (and (eq $key "distributor") (gt (int .count) 0))) }}
+      "ClusterOperation": "client",
+      "TargetClusterAddresses": {{ required "targetClusterAddresses must be set when gateway.count is greater than 1 or distributor.count is greater than 0" $.Values.targetClusterAddresses | toJson }},
+      {{- else }}
+      {{- with $.Values.targetClusterAddresses }}
+      "ClusterOperation": "client",
+      "TargetClusterAddresses": {{ toJson $.Values.targetClusterAddresses }},
+      {{- end }}
+      {{- end }}
       "ListenFrom": [
         {{- if .conf.ListenFrom }}
         {{- range $index, $listener := .conf.ListenFrom }}

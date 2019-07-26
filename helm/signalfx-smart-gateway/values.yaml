@@ -26,8 +26,7 @@ signalFxAccessToken: ""
 clusterName: ""
 
 # targetClusterAddresses -- a list of etcd client addresses to connect to (REQUIRED)
-targetClusterAddresses:
-  - etcd-cluster-client:2379
+targetClusterAddresses: []
 
 # listeners -- SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists.
 listeners: [
@@ -70,10 +69,6 @@ gateway:
   conf: 
     # gateway.conf.LogDir -- the directory to log to.  A value of "-" will log to stdout
     LogDir: "-"
-    # gateway.conf.ClusterOperation -- the cluster operation the gateway should
-    ClusterOperation: "client"
-    # gateawy.conf.TargetClusterAddresses -- a list of etcd client addresses to connect to
-    TargetClusterAddresses: []
     # gateway.conf.ListenFrom -- the gateway listeners.  This list is merged with the listeners list.
     ListenFrom: []
     # gateway.conf.ForwardTo -- the gateway forwarders.  This list is merged with the forwarders list.
@@ -154,10 +149,6 @@ distributor:
   conf: 
     # distributor.conf.LogDir -- the directory to log to.  A value of "-" will log to stdout
     LogDir: "-"
-    # distributor.conf.ClusterOperation -- the cluster operation the gateway should
-    ClusterOperation: "client"
-    # distributor.conf.TargetClusterAddresses -- a list of etcd client addresses to connect to
-    TargetClusterAddresses: []
     # distributor.conf.ListenFrom -- the gateway listeners.  This list is merged with the listeners list.
     ListenFrom: []
     # distributor.conf.ForwardTo -- the gateway forwarders.  This list is merged with the forwarders list.
