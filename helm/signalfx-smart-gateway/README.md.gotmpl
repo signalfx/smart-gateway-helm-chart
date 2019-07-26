@@ -70,7 +70,7 @@ A service will be created to forward requests to port 18080 on to the gateways' 
 
 ## About This Chart
 
-This chart deploys a cluster of SignalFx Smart Gateways and optionally deploys a SignalFx Smart Gateway Distributor layer infront of the SignalFx Smart Gateways.  This chart will also create a service definition infront of the Smart Gateways or the Distributor layer.
+This chart deploys a cluster of SignalFx Smart Gateways and optionally deploys a SignalFx Smart Gateway Distributor layer in front of the SignalFx Smart Gateways.  This chart will also create a service definition in front of the Smart Gateways or the Distributor layer.
 
 ### Important Configurations
 Before proceeding, it is recommended that you look at the [values.yaml](./values.yaml) file included with the helm chart.  There are two keys `gateway` and `distributor` each represents specific configurations about the SignalFx Smart Gateways and the SignalFx Smart Gateway Distributors.  
