@@ -15,11 +15,15 @@ for the gateway nodes to connect to.
 
 - Install the [etcd-operator](https://github.com/coreos/etcd-operator) helm [chart](https://github.com/helm/charts/tree/master/stable/etcd-operator) and configure the chart to setup RBAC resources for the operator
 
-`$ helm install --name etcd-operator  --set customResources.createEtcdClusterCRD=true,customResources.createBackupCRD=true,customResources.createRestoreCRD=true stable/etcd-operator`
+```
+$ helm install --name etcd-operator  --set customResources.createEtcdClusterCRD=true,customResources.createBackupCRD=true,customResources.createRestoreCRD=true stable/etcd-operator
+```
 
 - Update the chart to enable the cluster.  `cluster.enabled` is ignored on install.
 
-`$ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator`
+```
+$ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
+```
 
 ### Build the SignalFx Smart Gateway Image
 
@@ -34,11 +38,15 @@ Before installing the helm chart, a SignalFx Smart Gateway image must be generat
 To use this chart with Helm, add our SignalFx Helm chart repository to Helm
 like this:
 
-`$ helm repo add signalfx https://dl.signalfx.com/helm-repo`
+```
+$ helm repo add signalfx https://dl.signalfx.com/helm-repo
+```
 
 Then to ensure the latest state of the repository, run:
 
-`$ helm repo update`
+```
+$ helm repo update
+```
 
 Then you can install the gateway using the chart name `signalfx/signalfx-smart-gateway`.
 
@@ -48,15 +56,15 @@ Be sure to set values for:
 - targetClusterAddresses
 - image.tag (using `latest` is not recommended)
 
-`
-$ helm install signalfx/signalfx-smart-gateway
---set image.tag=<YOUR_SMART_GATEWAY_TAG>
---set signalFxAccessToken=<YOUR_ACCESS_TOKEN>
---set clusterName=<YOUR_CLUSTER_NAME>
---set targetClusterAddresses[0]=<YOUR_ETCD_CLUSTER_CLIENT_ADDRESS>
---set distributor.count=3
+```
+$ helm install signalfx/signalfx-smart-gateway \
+--set image.tag=<YOUR_SMART_GATEWAY_TAG> \
+--set signalFxAccessToken=<YOUR_ACCESS_TOKEN> \
+--set clusterName=<YOUR_CLUSTER_NAME> \
+--set targetClusterAddresses[0]=<YOUR_ETCD_CLUSTER_CLIENT_ADDRESS> \
+--set distributor.count=3 \
 --set gateway.count=3
-`
+```
 
 A service will be created to forward requests to port 18080 on to the gateways' or the distributors' SignalFx Listener.
 
