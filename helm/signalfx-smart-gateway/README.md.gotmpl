@@ -92,7 +92,7 @@ the Listener [documentation](https://github.com/signalfx/integrations/tree/maste
 information about Listeners.
 
 #### Forwarders
-The `forwarders` configuration is a list of SiganlFx Smart Gateway Forwarders configuration JSON objects.  These
+The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders configuration JSON objects.  These
 forwarders will be merged into the values.yaml list `gateway.conf.ForwardTo` and `distributor.conf.ForwardTo`.  Unlike
 `listeners`, there are default SignalFx Forwarder configurations stored in `gateway.conf.ForwardTo[0]` and
 `gateway.conf.ForwardTo[0]`.  This is because the forwarders are configured slightly differently between the
