@@ -82,8 +82,7 @@ and Listeners for the Smart Gateway.
 #### ClusterName
 The SignalFx Smart Gateway and SignalFx Smart Gateway Distributors must all use the same cluster name.  As a convenience
 There is a top level configuration called `clusterName`.  It will be inserted into `gateway.conf.ClusterName` and
-`distributor.conf.ClusterName`.  You can override this global configuration by directly setting gateway.conf.ClusterName
-and `distributor.conf.ClusterName`.
+`distributor.conf.ClusterName`.
 
 #### Listeners
 The `listeners` configuration is a list of SignalFx Smart Gateway Listener configuration JSON objects. These listeners 
@@ -101,7 +100,7 @@ gateway and distributor forwarders.
 
 #### Target Cluster Addresses
 The `targetClusterAddresses` configuration is a list of etcd client addresses for the gateways and distributors to
-connect to etcd.  This configuration is merged with the list `gateway.conf.TargetClusterAddresses` and 
+connect to etcd.  This configuration is will be inserted into `gateway.conf.TargetClusterAddresses` and 
 `distributor.conf.TargetClusterAddresses`.
 
 #### gateway.conf and distributor.conf
