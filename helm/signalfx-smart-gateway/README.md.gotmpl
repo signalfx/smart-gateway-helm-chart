@@ -63,10 +63,10 @@ Then you can install the gateway using the chart name
 #### Installing a Single Instance
 
 For a single instance, be sure to set values for:
-- SignalFx Access Token  (`signalFxAccessToken`)
-- Cluster Name           (`clusterName`)
-- Image Repository       (`image.repository`)
-- Image Tag              (`image.tag`)
+- `signalFxAccessToken`
+- `clusterName`
+- `image.repository`
+- `image.tag`
 
 ```
 $ helm install signalfx/signalfx-smart-gateway \
@@ -79,11 +79,11 @@ $ helm install signalfx/signalfx-smart-gateway \
 #### Installing A Cluster
 
 For a cluster, be sure to set values for:
-- SignalFx Access Token  (`signalFxAccessToken`)
-- Cluster Name           (`clusterName`)
-- Etcd Cluster Client Addresses (`targetClusterAddresses`)
-- Image Repository       (`image.repository`)
-- Image Tag              (`image.tag`)
+- `signalFxAccessToken`
+- `clusterName`
+- `targetClusterAddresses`
+- `image.repository`
+- `image.tag`
 
 ```
 $ helm install signalfx/signalfx-smart-gateway \
