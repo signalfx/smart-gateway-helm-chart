@@ -51,10 +51,11 @@ $ helm repo update
 Then you can install the gateway using the chart name `signalfx/signalfx-smart-gateway`.
 
 Be sure to set values for:
-- signalFxAccessToken
-- clusterName
-- targetClusterAddresses
-- image.tag (using `latest` is not recommended)
+- SignalFx Access Token  (`signalFxAccessToken`)
+- Cluster Name           (`clusterName`)
+- Etcd Cluster Client Addresses (`targetClusterAddresses`)
+- Image Repository       (`image.repository`)
+- Image Tag              (`image.tag`)
 
 ```
 $ helm install signalfx/signalfx-smart-gateway \
