@@ -25,8 +25,8 @@ signalFxAccessToken: ""
 # clusterName -- the name of the cluster (REQUIRED)
 clusterName: ""
 
-# targetClusterAddresses -- a list of etcd client addresses to connect to (REQUIRED)
-targetClusterAddresses: []
+# targetClusterAddresses -- (list) a list of etcd client addresses to connect to (REQUIRED)
+targetClusterAddresses:
 
 # listeners -- SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists.
 listeners: [
@@ -38,12 +38,7 @@ listeners: [
       # gateway.conf.ListenFrom[0].ListenAddr -- the address for the SignalFx Listener to listen on
       "ListenAddr": "0.0.0.0:18080",
       # gateway.conf.ListenFrom[0].RemoveSpanTags -- the list of span tags for the SignalFx Listener to remove
-      "RemoveSpanTags": [
-          {
-              "Service": "auth*",
-              "Tags": ["password"]
-          }
-      ]
+      "RemoveSpanTags": []
   }
 ]
 
@@ -81,7 +76,8 @@ gateway:
         "DrainingThreads": 50,
         "MaxDrainSize": 5000,
         "TraceSample": {
-          "ListenRebalanceAddress": "0.0.0.0:2382"
+          "ListenRebalanceAddress": "0.0.0.0:2382",
+          "BackupLocation": "/var/lib/gateway/data"
         }
       }
     ]

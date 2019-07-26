@@ -105,6 +105,23 @@ $ helm install signalfx/signalfx-smart-gateway \
 A service will be created to forward requests to port `18080` on to the 
 gateways' or the distributors' SignalFx Listener.
 
+## Persisting Sampling Data
+
+By default the SignalFx Smart Gateway forwarder is configured to backup data to
+`/var/lib/gateway/data`. When scaling the number of gateways in the cluster,
+down to 0 the last gateway will write out back up data to this location. In 
+order to persist this data you must attach a volume to the the containers.  This
+can be done by specifying a volume in `gateway.volumes` and a volume mount in
+`gateway.volumeMounts`.
+
+```bash
+--set gateway.volumeMounts[0].mountPath="/var/config/gateway" \
+--set gateway.volumeMounts[0].name="gateway-backups" \
+--set gateway.volumes[0].name="gateway-backups" \
+--set gateway.volumes[0].hostPath.path="/var/config/gateway" \
+--set gateway.volumes[0].hostPath.type="Directory"
+```
+
 ## About This Chart
 
 This chart deploys a cluster of SignalFx Smart Gateways and optionally deploys
@@ -225,6 +242,7 @@ by the Helm chart.
 | gateway.conf.ForwardTo[0].MaxDrainSize | int | 5000 |  |
 | gateway.conf.ForwardTo[0].Name | string | "signalfxforwarder" |  |
 | gateway.conf.ForwardTo[0].TraceSample | object | {} |  |
+| gateway.conf.ForwardTo[0].TraceSample.BackupLocation | string | "/var/lib/gateway/data" |  |
 | gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress | string | "0.0.0.0:2382" |  |
 | gateway.conf.ForwardTo[0].Type | string | "signalfx" |  |
 | gateway.conf.ListenFrom | list | [] | the gateway listeners.  This list is merged with the listeners list. |
@@ -264,10 +282,6 @@ by the Helm chart.
 | listeners[0].ListenAddr | string | "0.0.0.0:18080" |  |
 | listeners[0].Name | string | "signalfxlistener" |  |
 | listeners[0].RemoveSpanTags | list | [] |  |
-| listeners[0].RemoveSpanTags[0] | object | {} |  |
-| listeners[0].RemoveSpanTags[0].Service | string | "auth*" |  |
-| listeners[0].RemoveSpanTags[0].Tags | list | [] |  |
-| listeners[0].RemoveSpanTags[0].Tags[0] | string | "password" |  |
 | listeners[0].Type | string | "signalfx" |  |
 | nameOverride | string | "" | overrides the name of the helm chart |
 | service | object | {} | configurations for the service exposeing the gateway's SignalFx listener |
@@ -279,7 +293,7 @@ by the Helm chart.
 | service.ports[0].targetPort | string | "sfx-listener" | the name of the container port to send requests to |
 | service.type | string | "ClusterIP" | the type of service |
 | signalFxAccessToken | string | "" | access token for SignalFx.  (REQUIRED) |
-| targetClusterAddresses | list | [] | a list of etcd client addresses to connect to (REQUIRED) |
+| targetClusterAddresses | list | \<nil\> | a list of etcd client addresses to connect to (REQUIRED) |
 
 [1]: https://github.com/coreos/etcd-operator
 [2]: https://github.com/helm/charts/tree/master/stable/etcd-operator
