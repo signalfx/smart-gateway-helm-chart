@@ -75,6 +75,7 @@ Be sure to set values for:
 
 ```
 $ helm install signalfx/signalfx-smart-gateway \
+--set image.repository=<YOUR_SMART_GATEWAY_REPOSITORY> \
 --set image.tag=<YOUR_SMART_GATEWAY_TAG> \
 --set signalFxAccessToken=<YOUR_ACCESS_TOKEN> \
 --set clusterName=<YOUR_CLUSTER_NAME> \
@@ -83,8 +84,8 @@ $ helm install signalfx/signalfx-smart-gateway \
 --set gateway.count=3
 ```
 
-A service will be created to forward requests to port 18080 on to the gateways'
-or the distributors' SignalFx Listener.
+A service will be created to forward requests to port `18080` on to the 
+gateways' or the distributors' SignalFx Listener.
 
 ## About This Chart
 
@@ -113,7 +114,7 @@ The `listeners` configuration is a list of SignalFx Smart Gateway Listener
 configuration JSON objects. These listeners will be merged into the
 [values.yaml] lists `gateway.conf.ListenFrom` and `distributor.conf.ForwardTo`.
 There is a default SignalFx Listener configuration stored in `listeners[0]` and
-it is configured to listen on port 18080. Please refer to the Listener 
+it is configured to listen on port `18080`. Please refer to the Listener 
 [documentation][5] for more information about Listeners.
 
 #### Forwarders
