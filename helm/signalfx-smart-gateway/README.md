@@ -107,16 +107,17 @@ gateways' or the distributors' SignalFx Listener.
 
 ## Persisting Sampling Data
 
-By default the SignalFx Smart Gateway forwarder is configured to backup data to
-`/var/lib/gateway/data` inside the container. When scaling the number of
-gateways in the cluster, down to 0 the last gateway will write out back up data
-to this location. In order to persist this data you must create a persistent
-volume mount in the containers.  This can be done by specifying a volume claim
-template in `gateway.volumeClaimTemplates`.  Please configure the accessModes to
-be `ReadWriteOnce` so that a new claim will be created with each replica. Please
-refer to the Kubernetes documentation on Persistent Volume Claims (PVC's) for
-more details on configuring persistent storage and claiming space in that
-storage. 
+By default the SignalFx Smart Gateway forwarder is configured to persist and 
+backup data to /var/lib/gateway/data. The Smart Gateway buffers in-flight trace
+spans during its operation, and persists information about span and trace
+duration at this location on shutdown. To ensure the Smart Gateway continues to
+operate nominally and accurately selects the best traces to retain, you must
+create a persistent volume mount for this location in the containers. This can
+be done by specifying a volume claim template in `gateway.volumeClaimTemplates`.
+Please configure the accessModes to be `ReadWriteOnce` so that a new claim will
+be created with each replica. Please refer to the Kubernetes documentation on
+Persistent Volume Claims (PVC's) for more details on configuring persistent
+storage and claiming space in that storage. 
 
 After specifying the volume claim templates, a volume mount should be configured
 to use the persistent volume claim under `gateway.volumeMounts`.
