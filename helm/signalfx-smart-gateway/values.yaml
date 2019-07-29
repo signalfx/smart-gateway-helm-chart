@@ -30,14 +30,15 @@ targetClusterAddresses:
 
 # listeners -- SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists.
 listeners: [
+  # listeners[0] -- The default SiganlFx listener
   {
-      # gateway.conf.ListenFrom[0].Name -- the name of the SignalFx Listener
+      # listeners[0].Name -- the name of the SignalFx Listener
       "Name": "signalfxlistener",
-      # gateway.conf.ListenFrom[0].Type -- the type of the SignalFxListener
+      # listeners[0].Type -- the type of the SignalFxListener
       "Type": "signalfx",
-      # gateway.conf.ListenFrom[0].ListenAddr -- the address for the SignalFx Listener to listen on
+      # listeners[0].ListenAddr -- the address for the SignalFx Listener to listen on
       "ListenAddr": "0.0.0.0:18080",
-      # gateway.conf.ListenFrom[0].RemoveSpanTags -- the list of span tags for the SignalFx Listener to remove
+      # listeners[0].RemoveSpanTags -- the list of span tags for the SignalFx Listener to remove
       "RemoveSpanTags": []
   }
 ]
@@ -49,16 +50,9 @@ forwarders: []
 gateway:
   # gateway.count -- number of gateway pods to deploy
   count: 1
-  # gateway.advertisedSFXListenerAddress is an environment variable that will be set in
-  # the gateway pod.  It is used to configure SignalFx Smart Samplers to advertise
-  # their configured SignalFx Listener in the cluster.
-  # By defaul it is set to the $(POD_IP):<PORT> where this
-  # config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  # gateway.advertisedSFXListenerAddress -- is an environment variable that will be set in the gateway pod. It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
   advertisedSFXListenerAddress: $(POD_IP):18080
-  # gateway.advertisedSFXRebalanceAddress is an environment variable that will be set in
-  # the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise
-  # their configured RebalanceAddress in the cluister.  By defaul it is set to the 
-  # $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  # gateway.advertisedSFXRebalanceAddress -- is an environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluister.  By defaul it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
   advertisedSFXRebalanceAddress: $(POD_IP):2382
   # gateway.conf represents the SignalFx Smart Gateway's config file.  You can directly set additional configurations `--set gateway.conf.<GATEAY CONFIG KEY>=`
   conf: 
@@ -68,15 +62,19 @@ gateway:
     ListenFrom: []
     # gateway.conf.ForwardTo -- the gateway forwarders.  This list is merged with the forwarders list.
     ForwardTo: [
+      # gateway.conf.ForwardTo[0] -- the default SignalFx forwarder
       {
+        # gateway.conf.ForwardTo[0].Name -- the name of the SignalFx forwarder
         "Name": "signalfxforwarder",
+        # gateway.conf.ForwardTo[0].Type -- the type of the SignalFx forwarder
         "Type": "signalfx",
+        # gateway.conf.ForwardTo[0].AuthTokenEnvVar -- the environment variable to read for the SignalFx Access Token
         "AuthTokenEnvVar": "SFX_AUTH_TOKEN",
-        "BufferSize": 1000000,
-        "DrainingThreads": 50,
-        "MaxDrainSize": 5000,
+        # gateway.conf.ForwardTo[0].TraceSample -- configurations for the SignalFx Smart Sampler
         "TraceSample": {
+          # gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress -- the address to listen on for cluster rebalances
           "ListenRebalanceAddress": "0.0.0.0:2382",
+          # gateway.conf.ForwardTo[0].TraceSample.BackupLocation -- the location inside the container to back up sampling data
           "BackupLocation": "/var/lib/gateway/data"
         }
       }
@@ -125,21 +123,16 @@ gateway:
   volumes: []
   # gateway.volumeMounts -- kubernetes volume mounts to apply to the container
   volumeMounts: []
+  # gateway.volumeClaimTemplates -- volume claim templates to attach to replicas
+  volumeClaimTemplates: []
 
 # distributor -- configurations for distributor nodes
 distributor:
   # distributor.count -- number of gateway pods to deploy
   count: 0
-  # distributor.advertisedSFXListenerAddress is an environment variable that will be set in
-  # the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise
-  # their configured SignalFx Listener in the cluster.
-  # By defaul it is set to the $(POD_IP):<PORT> where this
-  # config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  # distributor.advertisedSFXListenerAddress -- is an environment variable that will be set in the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
   advertisedSFXListenerAddress: $(POD_IP):18080
-  # distributor.advertisedSFXRebalanceAddress is an environment variable that will be set in
-  # the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise
-  # their configured RebalanceAddress in the cluister.  By defaul it is set to the 
-  # $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  # distributor.advertisedSFXRebalanceAddress -- is an environment variable that will be set in the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluster.  By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
   advertisedSFXRebalanceAddress: $(POD_IP):2382
   # distributor.conf represents the SignalFx Smart Gateway's config file.
   conf: 
@@ -151,13 +144,15 @@ distributor:
     ForwardTo: [
       # distributor.conf.ForwardTo[0] -- the SignalFx Forwarder
       {
+        # distributor.conf.ForwardTo[0].Name -- the name of the SignalFx forwarder
         "Name": "signalfxforwarder",
+        # distributor.conf.ForwardTo[0].Type -- the type of the SignalFx forwarder
         "Type": "signalfx",
+        # distributor.conf.ForwardTo[0].AuthTokenEnvVar -- the environment variable to read for the SignalFx Access Token
         "AuthTokenEnvVar": "SFX_AUTH_TOKEN",
-        "BufferSize": 1000000,
-        "DrainingThreads": 50,
-        "MaxDrainSize": 5000,
+        # distributor.conf.ForwardTo[0].TraceSample -- the configurations for the trace distributor
         "TraceSample": {
+          # distributor.conf.ForwardTo[0].TraceSample.Distributor -- enables the distributor
           "Distributor": true
         }
       }
@@ -206,6 +201,8 @@ distributor:
   volumes: []
   # distributor.volumeMounts -- kubernetes volume mounts to apply to the container
   volumeMounts: []
+  # distributor.volumeClaimTemplates -- volume claim templates to attach to replicas
+  volumeClaimTemplates: []
 
 # service -- configurations for the service exposeing the gateway's SignalFx listener
 service:

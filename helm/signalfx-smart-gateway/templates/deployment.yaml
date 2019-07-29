@@ -1,6 +1,6 @@
 {{- range $key, $value := .Values }}{{ if (or (eq $key "gateway") (eq $key "distributor")) }}{{ with $value }}
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "signalfx-smart-gateway.fullname" $ }}{{if (eq $key "distributor")}}-{{ $key }}{{ end }}
   labels:
@@ -13,6 +13,10 @@ spec:
       app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
       app.kubernetes.io/instance: {{ $.Release.Name }}
       signalfx-gateway-type: {{ $key }}
+  {{- with .volumeClaimTemplates }}
+  volumeClaimTemplates:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   template:
     metadata:
       labels:

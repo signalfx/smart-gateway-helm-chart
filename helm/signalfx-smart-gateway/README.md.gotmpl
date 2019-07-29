@@ -13,10 +13,10 @@ existing etcd cluster for the gateway nodes to connect to.
 
 ### Setup an etcd Cluster
 
-- Install the [etcd-operator][1] Helm [chart][2]
+- Install the [etcd-operator][a] Helm [chart][b]
 and configure the chart to setup RBAC resources for the operator
 
-```
+```bash
 $ helm install \
 --name etcd-operator \
 --set customResources.createEtcdClusterCRD=true \
@@ -28,7 +28,7 @@ stable/etcd-operator
 - Update the chart to enable the cluster. `cluster.enabled` is ignored on
 install.
 
-```
+```bash
 $ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
 ```
 
@@ -37,8 +37,8 @@ $ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
 Before installing the Helm chart, a SignalFx Smart Gateway image must be
 generated.
 
-1. [Download the SignalFx Smart Gateway binary][3]
-2. [Use the documented dockerfile to build the image][4]
+1. [Download the SignalFx Smart Gateway binary][c]
+2. [Use the documented dockerfile to build the image][d]
 3. Place the image in a registry accessible to the Kubernetes cluster where the
 Helm chart will be installed.
 
@@ -47,13 +47,13 @@ Helm chart will be installed.
 To use this chart with Helm, add our SignalFx Helm chart repository to Helm
 like this:
 
-```
+```bash
 $ helm repo add signalfx https://dl.signalfx.com/helm-repo
 ```
 
 Then to ensure the latest state of the repository, run:
 
-```
+```bash
 $ helm repo update
 ```
 
@@ -68,7 +68,7 @@ For a single instance, be sure to set values for:
 - `image.repository`
 - `image.tag`
 
-```
+```bash
 $ helm install signalfx/signalfx-smart-gateway \
 --set image.repository=<YOUR_SMART_GATEWAY_REPOSITORY> \
 --set image.tag=<YOUR_SMART_GATEWAY_TAG> \
@@ -85,7 +85,7 @@ For a cluster, be sure to set values for:
 - `image.repository`
 - `image.tag`
 
-```
+```bash
 $ helm install signalfx/signalfx-smart-gateway \
 --set image.repository=<YOUR_SMART_GATEWAY_REPOSITORY> \
 --set image.tag=<YOUR_SMART_GATEWAY_TAG> \
@@ -102,18 +102,63 @@ gateways' or the distributors' SignalFx Listener.
 ## Persisting Sampling Data
 
 By default the SignalFx Smart Gateway forwarder is configured to backup data to
-`/var/lib/gateway/data`. When scaling the number of gateways in the cluster,
-down to 0 the last gateway will write out back up data to this location. In 
-order to persist this data you must attach a volume to the the containers.  This
-can be done by specifying a volume in `gateway.volumes` and a volume mount in
-`gateway.volumeMounts`.
+`/var/lib/gateway/data` inside the container. When scaling the number of
+gateways in the cluster, down to 0 the last gateway will write out back up data
+to this location. In order to persist this data you must create a persistent
+volume mount in the containers.  This can be done by specifying a volume claim
+template in `gateway.volumeClaimTemplates`.  Please configure the accessModes to
+be `ReadWriteOnce` so that a new claim will be created with each replica. Please
+refer to the Kubernetes documentation on Persistent Volume Claims (PVC's) for
+more details on configuring persistent storage and claiming space in that
+storage. 
+
+After specifying the volume claim templates, a volume mount should be configured
+to use the persistent volume claim under `gateway.volumeMounts`.
+
+### Setting a Persistent Volume Claim Template
+
+This is an example of a volume claim template in this chart's values.yaml.
+
+```yaml
+gateway:
+  volumeClaimTemplates:
+    - metadata:
+        name: "gateway-backups"
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "my-storage-class"
+        resources:
+          requests:
+            storage: 20Gi
+```
+
+The following snippet shows how to configure the preceding volume claim 
+template while installing the helm chart.
 
 ```bash
---set gateway.volumeMounts[0].mountPath="/var/config/gateway" \
---set gateway.volumeMounts[0].name="gateway-backups" \
---set gateway.volumes[0].name="gateway-backups" \
---set gateway.volumes[0].hostPath.path="/var/config/gateway" \
---set gateway.volumes[0].hostPath.type="Directory"
+--set gateway.volumeClaimTemplates[0].metadata.name="gateway-backups" \
+--set gateway.volumeClaimTemplates[0].spec.accessModes[0]="ReadWriteOnce" \
+--set gateway.volumeClaimTemplates[0].spec.storageClassName="storage-device" \
+--set gateway.volumeClaimTemplates[0].spec.resources.requests.storage="20Gi"
+```
+
+### Setting a Volume Mount
+
+This is an example of a volume mount in this chart's values.yaml.
+
+```yaml
+gateway:
+  volumeMounts:
+    - name: "gateway-backups"
+      mountPath: "/var/lib/gateway/data"
+```
+
+The following snippet shows how to configure the preceding volume mount while
+installing the helm chart.
+
+```bash
+--set gateway.volumeMounts[0].mountPath="/var/lib/gateway/data" \
+--set gateway.volumeMounts[0].name="gateway-backups"
 ```
 
 ## About This Chart
@@ -144,7 +189,7 @@ configuration JSON objects. These listeners will be merged into the
 [values.yaml] lists `gateway.conf.ListenFrom` and `distributor.conf.ForwardTo`.
 There is a default SignalFx Listener configuration stored in `listeners[0]` and
 it is configured to listen on port `18080`. Please refer to the Listener 
-[documentation][5] for more information about Listeners.
+[documentation][e] for more information about Listeners.
 
 #### Forwarders
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
@@ -167,7 +212,7 @@ You'll notice that there are configurations called `gateway.conf` and
 Smart Gateway config. They are passed in directly and so additional gateway /
 distributor configurations that are not in the [values.yaml] can be set by
 directly specifying the path through these objects. Please refer to the
-[SignalFx Smart Gateway Deployment Guide][6] for more information about
+[SignalFx Smart Gateway Deployment Guide][f] for more information about
 configurations for the gateway. Please note that `listeners` and `forwarders`
 will be merged into their corresponding fields in `gateway.conf` and 
 `distributor.conf`. `gateway.conf.TargetClusterAddresses` and 
@@ -176,14 +221,12 @@ will be merged into their corresponding fields in `gateway.conf` and
 `distributor.conf.ClusterOperation` will always be ignored and set intelligently
 by the Helm chart.
 
-{{ template "chart.requirementsSection" . }}
-
 {{ template "chart.valuesSection" . }}
 
-[1]: https://github.com/coreos/etcd-operator
-[2]: https://github.com/helm/charts/tree/master/stable/etcd-operator
-[3]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#downloading-a-specific-version-of-the-smart-gateway
-[4]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#building-a-docker-image
-[5]: https://github.com/signalfx/integrations/tree/master/gateway#listenfrom
-[6]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
+[a]: https://github.com/coreos/etcd-operator
+[b]: https://github.com/helm/charts/tree/master/stable/etcd-operator
+[c]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#downloading-a-specific-version-of-the-smart-gateway
+[d]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#building-a-docker-image
+[e]: https://github.com/signalfx/integrations/tree/master/gateway#listenfrom
+[f]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
 [values.yaml]: ./values.yaml

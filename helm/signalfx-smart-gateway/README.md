@@ -19,10 +19,10 @@ existing etcd cluster for the gateway nodes to connect to.
 
 ### Setup an etcd Cluster
 
-- Install the [etcd-operator][1] Helm [chart][2]
+- Install the [etcd-operator][a] Helm [chart][b]
 and configure the chart to setup RBAC resources for the operator
 
-```
+```bash
 $ helm install \
 --name etcd-operator \
 --set customResources.createEtcdClusterCRD=true \
@@ -34,7 +34,7 @@ stable/etcd-operator
 - Update the chart to enable the cluster. `cluster.enabled` is ignored on
 install.
 
-```
+```bash
 $ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
 ```
 
@@ -43,8 +43,8 @@ $ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
 Before installing the Helm chart, a SignalFx Smart Gateway image must be
 generated.
 
-1. [Download the SignalFx Smart Gateway binary][3]
-2. [Use the documented dockerfile to build the image][4]
+1. [Download the SignalFx Smart Gateway binary][c]
+2. [Use the documented dockerfile to build the image][d]
 3. Place the image in a registry accessible to the Kubernetes cluster where the
 Helm chart will be installed.
 
@@ -53,13 +53,13 @@ Helm chart will be installed.
 To use this chart with Helm, add our SignalFx Helm chart repository to Helm
 like this:
 
-```
+```bash
 $ helm repo add signalfx https://dl.signalfx.com/helm-repo
 ```
 
 Then to ensure the latest state of the repository, run:
 
-```
+```bash
 $ helm repo update
 ```
 
@@ -74,7 +74,7 @@ For a single instance, be sure to set values for:
 - `image.repository`
 - `image.tag`
 
-```
+```bash
 $ helm install signalfx/signalfx-smart-gateway \
 --set image.repository=<YOUR_SMART_GATEWAY_REPOSITORY> \
 --set image.tag=<YOUR_SMART_GATEWAY_TAG> \
@@ -91,7 +91,7 @@ For a cluster, be sure to set values for:
 - `image.repository`
 - `image.tag`
 
-```
+```bash
 $ helm install signalfx/signalfx-smart-gateway \
 --set image.repository=<YOUR_SMART_GATEWAY_REPOSITORY> \
 --set image.tag=<YOUR_SMART_GATEWAY_TAG> \
@@ -108,18 +108,63 @@ gateways' or the distributors' SignalFx Listener.
 ## Persisting Sampling Data
 
 By default the SignalFx Smart Gateway forwarder is configured to backup data to
-`/var/lib/gateway/data`. When scaling the number of gateways in the cluster,
-down to 0 the last gateway will write out back up data to this location. In 
-order to persist this data you must attach a volume to the the containers.  This
-can be done by specifying a volume in `gateway.volumes` and a volume mount in
-`gateway.volumeMounts`.
+`/var/lib/gateway/data` inside the container. When scaling the number of
+gateways in the cluster, down to 0 the last gateway will write out back up data
+to this location. In order to persist this data you must create a persistent
+volume mount in the containers.  This can be done by specifying a volume claim
+template in `gateway.volumeClaimTemplates`.  Please configure the accessModes to
+be `ReadWriteOnce` so that a new claim will be created with each replica. Please
+refer to the Kubernetes documentation on Persistent Volume Claims (PVC's) for
+more details on configuring persistent storage and claiming space in that
+storage. 
+
+After specifying the volume claim templates, a volume mount should be configured
+to use the persistent volume claim under `gateway.volumeMounts`.
+
+### Setting a Persistent Volume Claim Template
+
+This is an example of a volume claim template in this chart's values.yaml.
+
+```yaml
+gateway:
+  volumeClaimTemplates:
+    - metadata:
+        name: "gateway-backups"
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "my-storage-class"
+        resources:
+          requests:
+            storage: 20Gi
+```
+
+The following snippet shows how to configure the preceding volume claim 
+template while installing the helm chart.
 
 ```bash
---set gateway.volumeMounts[0].mountPath="/var/config/gateway" \
---set gateway.volumeMounts[0].name="gateway-backups" \
---set gateway.volumes[0].name="gateway-backups" \
---set gateway.volumes[0].hostPath.path="/var/config/gateway" \
---set gateway.volumes[0].hostPath.type="Directory"
+--set gateway.volumeClaimTemplates[0].metadata.name="gateway-backups" \
+--set gateway.volumeClaimTemplates[0].spec.accessModes[0]="ReadWriteOnce" \
+--set gateway.volumeClaimTemplates[0].spec.storageClassName="storage-device" \
+--set gateway.volumeClaimTemplates[0].spec.resources.requests.storage="20Gi"
+```
+
+### Setting a Volume Mount
+
+This is an example of a volume mount in this chart's values.yaml.
+
+```yaml
+gateway:
+  volumeMounts:
+    - name: "gateway-backups"
+      mountPath: "/var/lib/gateway/data"
+```
+
+The following snippet shows how to configure the preceding volume mount while
+installing the helm chart.
+
+```bash
+--set gateway.volumeMounts[0].mountPath="/var/lib/gateway/data" \
+--set gateway.volumeMounts[0].name="gateway-backups"
 ```
 
 ## About This Chart
@@ -150,7 +195,7 @@ configuration JSON objects. These listeners will be merged into the
 [values.yaml] lists `gateway.conf.ListenFrom` and `distributor.conf.ForwardTo`.
 There is a default SignalFx Listener configuration stored in `listeners[0]` and
 it is configured to listen on port `18080`. Please refer to the Listener 
-[documentation][5] for more information about Listeners.
+[documentation][e] for more information about Listeners.
 
 #### Forwarders
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
@@ -173,7 +218,7 @@ You'll notice that there are configurations called `gateway.conf` and
 Smart Gateway config. They are passed in directly and so additional gateway /
 distributor configurations that are not in the [values.yaml] can be set by
 directly specifying the path through these objects. Please refer to the
-[SignalFx Smart Gateway Deployment Guide][6] for more information about
+[SignalFx Smart Gateway Deployment Guide][f] for more information about
 configurations for the gateway. Please note that `listeners` and `forwarders`
 will be merged into their corresponding fields in `gateway.conf` and 
 `distributor.conf`. `gateway.conf.TargetClusterAddresses` and 
@@ -182,28 +227,23 @@ will be merged into their corresponding fields in `gateway.conf` and
 `distributor.conf.ClusterOperation` will always be ignored and set intelligently
 by the Helm chart.
 
-
-
 ## Chart Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterName | string | "" | the name of the cluster (REQUIRED) |
 | distributor | object | {} | configurations for distributor nodes |
-| distributor.advertisedSFXListenerAddress | string | "$(POD_IP):18080" |  |
-| distributor.advertisedSFXRebalanceAddress | string | "$(POD_IP):2382" |  |
+| distributor.advertisedSFXListenerAddress | string | "$(POD_IP):18080" | is an environment variable that will be set in the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
+| distributor.advertisedSFXRebalanceAddress | string | "$(POD_IP):2382" | is an environment variable that will be set in the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluster.  By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
 | distributor.affinity | object | {} | kubernetes affinity configuriations to apply to the pod |
 | distributor.conf | object | {} |  |
 | distributor.conf.ForwardTo | list | [] | the gateway forwarders.  This list is merged with the forwarders list. |
 | distributor.conf.ForwardTo[0] | object | {} | the SignalFx Forwarder |
-| distributor.conf.ForwardTo[0].AuthTokenEnvVar | string | "SFX_AUTH_TOKEN" |  |
-| distributor.conf.ForwardTo[0].BufferSize | int | 1000000 |  |
-| distributor.conf.ForwardTo[0].DrainingThreads | int | 50 |  |
-| distributor.conf.ForwardTo[0].MaxDrainSize | int | 5000 |  |
-| distributor.conf.ForwardTo[0].Name | string | "signalfxforwarder" |  |
-| distributor.conf.ForwardTo[0].TraceSample | object | {} |  |
-| distributor.conf.ForwardTo[0].TraceSample.Distributor | bool | true |  |
-| distributor.conf.ForwardTo[0].Type | string | "signalfx" |  |
+| distributor.conf.ForwardTo[0].AuthTokenEnvVar | string | "SFX_AUTH_TOKEN" | the environment variable to read for the SignalFx Access Token |
+| distributor.conf.ForwardTo[0].Name | string | "signalfxforwarder" | the name of the SignalFx forwarder |
+| distributor.conf.ForwardTo[0].TraceSample | object | {} | the configurations for the trace distributor |
+| distributor.conf.ForwardTo[0].TraceSample.Distributor | bool | true | enables the distributor |
+| distributor.conf.ForwardTo[0].Type | string | "signalfx" | the type of the SignalFx forwarder |
 | distributor.conf.ListenFrom | list | [] | the gateway listeners.  This list is merged with the listeners list. |
 | distributor.conf.LogDir | string | "-" | the directory to log to.  A value of "-" will log to stdout |
 | distributor.containerPorts | list | [] | a list of kubernetes container port definitions apply to the container |
@@ -225,26 +265,24 @@ by the Helm chart.
 | distributor.readinessProbe | object | {} | a kubernetes readiness probe to determine when the container is ready |
 | distributor.resources | object | {} | kubernetes deployment resources |
 | distributor.tolerations | list | [] | kubernetes deployment tolerations to apply to the pod |
+| distributor.volumeClaimTemplates | list | [] | volume claim templates to attach to replicas |
 | distributor.volumeMounts | list | [] | kubernetes volume mounts to apply to the container |
 | distributor.volumes | list | [] | kubernetes volumes to apply to the pod |
 | forwarders | list | [] | additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo and distributor.conf.ForwardTo lists. |
 | fullnameOverride | string | "" | overrides the full name of the helm chart |
 | gateway | object | {} | configurations for gateway nodes |
-| gateway.advertisedSFXListenerAddress | string | "$(POD_IP):18080" |  |
-| gateway.advertisedSFXRebalanceAddress | string | "$(POD_IP):2382" |  |
+| gateway.advertisedSFXListenerAddress | string | "$(POD_IP):18080" | is an environment variable that will be set in the gateway pod. It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
+| gateway.advertisedSFXRebalanceAddress | string | "$(POD_IP):2382" | is an environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluister.  By defaul it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
 | gateway.affinity | object | {} | kubernetes affinity configuriations to apply to the pod |
 | gateway.conf | object | {} |  |
 | gateway.conf.ForwardTo | list | [] | the gateway forwarders.  This list is merged with the forwarders list. |
-| gateway.conf.ForwardTo[0] | object | {} |  |
-| gateway.conf.ForwardTo[0].AuthTokenEnvVar | string | "SFX_AUTH_TOKEN" |  |
-| gateway.conf.ForwardTo[0].BufferSize | int | 1000000 |  |
-| gateway.conf.ForwardTo[0].DrainingThreads | int | 50 |  |
-| gateway.conf.ForwardTo[0].MaxDrainSize | int | 5000 |  |
-| gateway.conf.ForwardTo[0].Name | string | "signalfxforwarder" |  |
-| gateway.conf.ForwardTo[0].TraceSample | object | {} |  |
-| gateway.conf.ForwardTo[0].TraceSample.BackupLocation | string | "/var/lib/gateway/data" |  |
-| gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress | string | "0.0.0.0:2382" |  |
-| gateway.conf.ForwardTo[0].Type | string | "signalfx" |  |
+| gateway.conf.ForwardTo[0] | object | {} | the default SignalFx forwarder |
+| gateway.conf.ForwardTo[0].AuthTokenEnvVar | string | "SFX_AUTH_TOKEN" | the environment variable to read for the SignalFx Access Token |
+| gateway.conf.ForwardTo[0].Name | string | "signalfxforwarder" | the name of the SignalFx forwarder |
+| gateway.conf.ForwardTo[0].TraceSample | object | {} | configurations for the SignalFx Smart Sampler |
+| gateway.conf.ForwardTo[0].TraceSample.BackupLocation | string | "/var/lib/gateway/data" | the location inside the container to back up sampling data |
+| gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress | string | "0.0.0.0:2382" | the address to listen on for cluster rebalances |
+| gateway.conf.ForwardTo[0].Type | string | "signalfx" | the type of the SignalFx forwarder |
 | gateway.conf.ListenFrom | list | [] | the gateway listeners.  This list is merged with the listeners list. |
 | gateway.conf.LogDir | string | "-" | the directory to log to.  A value of "-" will log to stdout |
 | gateway.containerPorts | list | [] | a list of kubernetes container port definitions apply to the container |
@@ -266,6 +304,7 @@ by the Helm chart.
 | gateway.readinessProbe | object | {} | a kubernetes readiness probe to determine when the container is ready |
 | gateway.resources | object | {} | kubernetes deployment resources |
 | gateway.tolerations | list | [] | kubernetes deployment tolerations to apply to the pod |
+| gateway.volumeClaimTemplates | list | [] | volume claim templates to attach to replicas |
 | gateway.volumeMounts | list | [] | kubernetes volume mounts to apply to the container |
 | gateway.volumes | list | [] | kubernetes volumes to apply to the pod |
 | image | object | {} | configurations for the deployed docker image |
@@ -278,11 +317,11 @@ by the Helm chart.
 | ingress | object | {} |  |
 | ingress.enabled | bool | false |  |
 | listeners | list | [] | SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists. |
-| listeners[0] | object | {} |  |
-| listeners[0].ListenAddr | string | "0.0.0.0:18080" |  |
-| listeners[0].Name | string | "signalfxlistener" |  |
-| listeners[0].RemoveSpanTags | list | [] |  |
-| listeners[0].Type | string | "signalfx" |  |
+| listeners[0] | object | {} | The default SiganlFx listener |
+| listeners[0].ListenAddr | string | "0.0.0.0:18080" | the address for the SignalFx Listener to listen on |
+| listeners[0].Name | string | "signalfxlistener" | the name of the SignalFx Listener |
+| listeners[0].RemoveSpanTags | list | [] | the list of span tags for the SignalFx Listener to remove |
+| listeners[0].Type | string | "signalfx" | the type of the SignalFxListener |
 | nameOverride | string | "" | overrides the name of the helm chart |
 | service | object | {} | configurations for the service exposeing the gateway's SignalFx listener |
 | service.ports | list | [] | the ports to configure on the service |
@@ -295,10 +334,10 @@ by the Helm chart.
 | signalFxAccessToken | string | "" | access token for SignalFx.  (REQUIRED) |
 | targetClusterAddresses | list | \<nil\> | a list of etcd client addresses to connect to (REQUIRED) |
 
-[1]: https://github.com/coreos/etcd-operator
-[2]: https://github.com/helm/charts/tree/master/stable/etcd-operator
-[3]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#downloading-a-specific-version-of-the-smart-gateway
-[4]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#building-a-docker-image
-[5]: https://github.com/signalfx/integrations/tree/master/gateway#listenfrom
-[6]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
+[a]: https://github.com/coreos/etcd-operator
+[b]: https://github.com/helm/charts/tree/master/stable/etcd-operator
+[c]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#downloading-a-specific-version-of-the-smart-gateway
+[d]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#building-a-docker-image
+[e]: https://github.com/signalfx/integrations/tree/master/gateway#listenfrom
+[f]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
 [values.yaml]: ./values.yaml
