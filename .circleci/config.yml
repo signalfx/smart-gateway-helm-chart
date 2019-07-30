@@ -1,0 +1,70 @@
+version: 2.1
+executors:
+  helm_min:
+    docker:
+      - image: alpine/helm:2.13.0
+    environment: &environment
+      HELM_DOCS_VERSION: 0.5.0
+  helm_latest:
+    docker:
+      - image: alpine/helm:latest
+    environment: *environment
+
+commands:
+  install_helm-docs:
+    description: Install helm-docs
+    steps:
+      - run:
+          name: Install curl
+          command: apk add curl
+      - run:
+          name: Install github.com/norwoodj/helm-docs
+          command: |
+            curl -Lk https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz  -o /tmp/helm-docs.tar.gz
+            mkdir /tmp/helm-docs
+            tar -xzv -f /tmp/helm-docs.tar.gz -C /tmp/helm-docs/
+            ls /tmp/helm-docs
+            mv /tmp/helm-docs/helm-docs /usr/bin/helm-docs
+            helm-docs --version
+
+  helm_lint:
+    description: Run helm lint on helm chart to identify issues
+    steps:
+      - run:
+          name: Helm Lint
+          command: |
+            helm lint ./helm/signalfx-smart-gateway --values ./helm/dev-values.yaml || \
+            (echo 'Helm lint issues found. Please run "./helm/signalfx-smart-gateway --values ./helm/dev-values.yaml", resolve the issues, and commit the changes' && exit 1)
+
+  verify_readme:
+    description: Verify that the README.md generated with helm-docs matches the \
+                 committed README.md
+    steps:
+      - run:
+          name: Verify helm/signalfx-smart-gateway/README.md
+          command: |
+            helm-docs -d | diff helm/signalfx-smart-gateway/README.md - || \
+            (echo "ERROR: Generated README.md is different from the committed README.md.  Use github.com/norwoodj/helm-docs v${HELM_DOCS_VERSION} to regenerate the helm chart's README.md and commit" && \
+            exit 1)
+jobs:
+  helm_min:
+    executor: helm_min
+    steps:
+      - checkout
+      - helm_lint
+      - install_helm-docs
+      - verify_readme
+  helm_latest:
+    executor: helm_latest
+    steps:
+      - checkout
+      - helm_lint
+      - install_helm-docs
+      - verify_readme
+
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - helm_min
+      - helm_latest
