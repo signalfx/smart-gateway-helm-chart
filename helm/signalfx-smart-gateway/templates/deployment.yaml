@@ -1,0 +1,112 @@
+{{- range $key, $value := .Values }}{{ if (or (eq $key "gateway") (eq $key "distributor")) }}{{ with $value }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "signalfx-smart-gateway.fullname" $ }}{{if (eq $key "distributor")}}-{{ $key }}{{ end }}
+  labels:
+    signalfx-gateway-type: {{ $key }}
+{{ include "signalfx-smart-gateway.labels" $ | indent 4 }}
+spec:
+  replicas: {{ .count }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      signalfx-gateway-type: {{ $key }}
+  {{- with .volumeClaimTemplates }}
+  volumeClaimTemplates:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        signalfx-gateway-type: {{ $key }}
+    spec:
+
+      {{- with .nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "signalfx-smart-gateway.fullname" $ }}{{if (eq $key "distributor")}}-{{ $key }}{{ end }}
+        {{with .volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{end }}
+
+      {{- if $.Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $.Values.image.pullSecrets | nindent 8 }}
+      {{- end }}
+
+      containers:
+        - name: {{ $.Chart.Name }}{{if (eq $key "distributor")}}-{{ $key }}{{ end }}
+          image: {{ required "must specify an image repository" $.Values.image.repository }}:{{ required "must specify an image tag" $.Values.image.tag }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          env:
+            # ip address of the pod to be used
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            # the SignalFx Auth Token
+            - name: SFX_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "signalfx-smart-gateway.fullname" $ }}
+                  key: access-token
+            # the ingest address of the pod's SignalFx Listener
+            - name: SFX_SAMPLER_INGEST_ADDRESS
+              value: {{ .advertisedSFXListenerAddress }}
+            # the address of the SignalFx Smart Sampler's rebalance address
+            - name: SFX_SAMPLER_ADVERTISE_REBALANCE
+              value: {{ .advertisedSFXRebalanceAddress }}
+            {{- with .env }}
+            {{- toYaml . | indent 12 }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: /var/config/gateway
+              name: config
+            {{- with .volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          {{- with .containerPorts }}
+          # container ports to expose
+          ports: 
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .livenessProbe }}
+          # liveness probes
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .readinessProbe }}
+          # readiness probes
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+
+          {{- with .resources }}
+          # container resources
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+---
+{{- end }}{{ end }}{{ end }}

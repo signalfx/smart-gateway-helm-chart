@@ -1,0 +1,58 @@
+{{- range $key, $value := .Values }}{{ if (or (eq $key "gateway") (eq $key "distributor")) }}{{ with $value }}
+---
+# distributor configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "signalfx-smart-gateway.fullname" $ }}{{if (eq $key "distributor") }}-{{ $key }}{{ end }}
+  labels:
+    signalfx-gateway-type: {{ $key }}
+{{ include "signalfx-smart-gateway.labels" $ | indent 4 }}
+data:
+  gateway.conf: |
+    {
+      {{- if .ClusterName }}
+      "ClusterName": {{ toJson .ClusterName }},
+      {{ else }}
+      "ClusterName": {{ toJson $.Values.clusterName}},
+      {{- end }}
+      {{- range $k, $v := .conf}}{{ if not (eq $k "Listeners" "Forwarders" "TargetClusterAddresses" "ClusterName" "ClusterOperation")}}
+      "{{ $k }}": {{ toJson $v }},
+      {{- end }}{{ end }}
+      {{- if (or (and (eq $key "gateway") (gt (int .count) 1)) (and (eq $key "distributor") (gt (int .count) 0))) }}
+      "ClusterOperation": "client",
+      "TargetClusterAddresses": {{ required "targetClusterAddresses must be set when gateway.count is greater than 1 or distributor.count is greater than 0" $.Values.targetClusterAddresses | toJson }},
+      {{- else }}
+      {{- with $.Values.targetClusterAddresses }}
+      "ClusterOperation": "client",
+      "TargetClusterAddresses": {{ toJson $.Values.targetClusterAddresses }},
+      {{- end }}
+      {{- end }}
+      "ListenFrom": [
+        {{- if .conf.ListenFrom }}
+        {{- range $index, $listener := .conf.ListenFrom }}
+        {{- if $index}},{{- end }}
+        {{toJson $listener}}
+        {{- end }}
+        {{- else }}
+        {{- range $index, $listener := $.Values.listeners }}
+        {{- if $index}},{{- end }}
+        {{toJson $listener}}
+        {{- end }}
+        {{- end }}
+      ],
+      "ForwardTo": [
+        {{- if .conf.ForwardTo }}
+        {{- range $index, $forwarder := .conf.ForwardTo }}
+        {{- if $index}},{{- end }}
+        {{toJson $forwarder}}
+        {{- end }}
+        {{- else }}
+        {{- range $index, $forwarder := $.Values.forwarders }}
+        {{- if $index}},{{- end }}
+        {{toJson $forwarder}}
+        {{- end }}
+        {{- end }}
+      ]
+    }
+{{- end }}{{ end }}{{ end }}

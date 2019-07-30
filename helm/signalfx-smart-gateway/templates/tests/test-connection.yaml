@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "signalfx-smart-gateway.fullname" . }}-test-connection"
+  labels:
+{{ include "signalfx-smart-gateway.labels" $ | indent 4 }}
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args:  ['{{ include "signalfx-smart-gateway.fullname" . }}:{{ .Values.service.port }}/healthz']
+  restartPolicy: Never
