@@ -98,12 +98,11 @@ $ helm install signalfx/signalfx-smart-gateway \
 --set signalFxAccessToken=<YOUR_ACCESS_TOKEN> \
 --set clusterName=<YOUR_CLUSTER_NAME> \
 --set targetClusterAddresses[0]=<YOUR_ETCD_CLUSTER_CLIENT_ADDRESS> \
---set distributor.count=3 \
 --set gateway.count=3
 ```
 
 A service will be created to forward requests to port `18080` on to the 
-gateways' or the distributors' SignalFx Listener.
+gateways' SignalFx Listener.
 
 ## Persisting Sampling Data
 
@@ -170,104 +169,66 @@ installing the helm chart.
 
 ## About This Chart
 
-This chart deploys a cluster of SignalFx Smart Gateways and optionally deploys
-a SignalFx Smart Gateway Distributor layer in front of the SignalFx Smart
-Gateways. This chart will also create a service definition in front of the
-Smart Gateways or the Distributor layer.
+This chart deploys a cluster of SignalFx Smart Gateways and creates a service
+definition in front of them.
 
 ### Important Configurations
 Before proceeding, it is recommended that you look at the [values.yaml] file
-included with the Helm chart. There are two keys `gateway` and `distributor`
-each represents specific configurations about the SignalFx Smart Gateways and
-the SignalFx Smart Gateway Distributors.
+included with the Helm chart. The key `gateway` represents specific
+configurations about the SignalFx Smart Gateways.
 
 For convenience, there are a few top level configurations in the [values.yaml]
-to insert and configure Forwarders and Listeners for the Smart Gateway. 
+to insert and configure Forwarders and Listeners for the Smart Gateway.
 
 #### ClusterName
-The SignalFx Smart Gateway and SignalFx Smart Gateway Distributors must all use
-the same cluster name. As a convenience there is a top level configuration
-called `clusterName`. It will be inserted into `gateway.conf.ClusterName` and
-`distributor.conf.ClusterName`.
+The SignalFx Smart Gateway must all use the same cluster name. As a convenience
+there is a top level configuration called `clusterName`. It will be inserted
+into `gateway.conf.ClusterName`.
 
 #### Listeners
 The `listeners` configuration is a list of SignalFx Smart Gateway Listener
 configuration JSON objects. These listeners will be merged into the
-[values.yaml] lists `gateway.conf.ListenFrom` and `distributor.conf.ForwardTo`.
-There is a default SignalFx Listener configuration stored in `listeners[0]` and
-it is configured to listen on port `18080`. Please refer to the Listener 
-[documentation][e] for more information about Listeners.
+[values.yaml] lists `gateway.conf.ListenFrom`.  There is a default SignalFx
+Listener configuration stored in `listeners[0]` and it is configured to listen
+on port `18080`. Please refer to the Listener [documentation][e] for more
+information about Listeners.
 
 #### Forwarders
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
 configuration JSON objects. These forwarders will be merged into the
-[values.yaml] list `gateway.conf.ForwardTo` and `distributor.conf.ForwardTo`.
-Unlike `listeners`, there are default SignalFx Forwarder configurations stored
-in `gateway.conf.ForwardTo[0]` and `gateway.conf.ForwardTo[0]`. This is because
-the forwarders are configured slightly differently between the gateway and
-distributor forwarders.
+[values.yaml] list `gateway.conf.ForwardTo`.  Please note this difference in
+configuration.  While the default SignalFx Listener is under `listeners[0]`,
+but the default SignalFx Forwarder is under `gateway.conf.ForwardTo`.
 
 #### Target Cluster Addresses
 The `targetClusterAddresses` configuration is a list of etcd client addresses
-for the gateways and distributors to connect to etcd. This configuration is
-will be inserted into `gateway.conf.TargetClusterAddresses` and
-`distributor.conf.TargetClusterAddresses`.
+for the gateways to connect to etcd. This configuration will be inserted into
+`gateway.conf.TargetClusterAddresses`.
 
-#### gateway.conf and distributor.conf
-You'll notice that there are configurations called `gateway.conf` and 
-`distributor.conf` they are JSON config objects representing plain SignalFx
-Smart Gateway config. They are passed in directly and so additional gateway /
-distributor configurations that are not in the [values.yaml] can be set by
-directly specifying the path through these objects. Please refer to the
-[SignalFx Smart Gateway Deployment Guide][f] for more information about
-configurations for the gateway. Please note that `listeners` and `forwarders`
-will be merged into their corresponding fields in `gateway.conf` and 
-`distributor.conf`. `gateway.conf.TargetClusterAddresses` and 
-`gateway.conf.TargetClusterAddresses` are always overridden by 
-`targetClusterAddresses`. `gateway.conf.ClusterOperation` and 
-`distributor.conf.ClusterOperation` will always be ignored and set intelligently
-by the Helm chart.
+#### gateway.conf
+You'll notice that there is a configuration called `gateway.conf` that is a JSON
+config objects representing plain SignalFx Smart Gateway config. It is passed in
+directly so additional gateway configurations that are not in the
+[values.yaml] can be set by directly specifying the path through this object.
+Please refer to the [SignalFx Smart Gateway Deployment Guide][f] for more
+information about configurations for the gateway. Please note that `listeners`
+and `forwarders` will be merged into their corresponding fields in
+`gateway.conf`. `gateway.conf.TargetClusterAddresses` is always overridden by
+`targetClusterAddresses`. `gateway.conf.ClusterOperation` and will always be
+ignored and set intelligently by the Helm chart.
 
 ## Chart Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | clusterName | string | `""` | the name of the cluster (REQUIRED) |
-| distributor | object | `{"advertisedSFXListenerAddress":"$(POD_IP):18080","advertisedSFXRebalanceAddress":"$(POD_IP):2382","affinity":{},"conf":{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"Distributor":true},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"},"containerPorts":[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}],"count":0,"livenessProbe":{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15},"nodeSelector":{},"readinessProbe":{},"resources":{},"tolerations":[],"volumeClaimTemplates":[],"volumeMounts":[],"volumes":[]}` | configurations for distributor nodes |
-| distributor.advertisedSFXListenerAddress | string | `"$(POD_IP):18080"` | is an environment variable that will be set in the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
-| distributor.advertisedSFXRebalanceAddress | string | `"$(POD_IP):2382"` | is an environment variable that will be set in the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluster.  By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
-| distributor.affinity | object | `{}` | kubernetes affinity configuriations to apply to the pod |
-| distributor.conf.ForwardTo | list | `[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"Distributor":true},"Type":"signalfx"}]` | the gateway forwarders.  This list is merged with the forwarders list. |
-| distributor.conf.ForwardTo[0] | object | `{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"Distributor":true},"Type":"signalfx"}` | the SignalFx Forwarder |
-| distributor.conf.ForwardTo[0].AuthTokenEnvVar | string | `"SFX_AUTH_TOKEN"` | the environment variable to read for the SignalFx Access Token |
-| distributor.conf.ForwardTo[0].Name | string | `"signalfxforwarder"` | the name of the SignalFx forwarder |
-| distributor.conf.ForwardTo[0].TraceSample | object | `{"Distributor":true}` | the configurations for the trace distributor |
-| distributor.conf.ForwardTo[0].TraceSample.Distributor | bool | `true` | enables the distributor |
-| distributor.conf.ForwardTo[0].Type | string | `"signalfx"` | the type of the SignalFx forwarder |
-| distributor.conf.ListenFrom | list | `[]` | the gateway listeners.  This list is merged with the listeners list. |
-| distributor.conf.LogDir | string | `"-"` | the directory to log to.  A value of "-" will log to stdout |
-| distributor.containerPorts | list | `[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}]` | a list of kubernetes container port definitions apply to the container |
-| distributor.containerPorts[0].containerPort | int | `18080` | the container port of the SignalFx Listener |
-| distributor.containerPorts[0].name | string | `"sfx-listener"` | the name of the SignalFx Listener containerPort |
-| distributor.containerPorts[0].protocol | string | `"TCP"` | the protocol of the SignalFx Listener |
-| distributor.containerPorts[1].containerPort | int | `2382` | the container port of the SignalFx Forwarder's rebalance server |
-| distributor.containerPorts[1].name | string | `"sfx-rebalance"` | the name of the SignalFx Forwarder's rebalance containerPort |
-| distributor.containerPorts[1].protocol | string | `"TCP"` | the protocol of the SignalFx Forwarder's rebalance server |
-| distributor.count | int | `0` | number of gateway pods to deploy |
-| distributor.livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15}` | a kubernetes liveness probe to determine the health of the container |
-| distributor.nodeSelector | object | `{}` | kubernetes node selectors to apply to the pod |
-| distributor.readinessProbe | object | `{}` | a kubernetes readiness probe to determine when the container is ready |
-| distributor.resources | object | `{}` | kubernetes deployment resources |
-| distributor.tolerations | list | `[]` | kubernetes deployment tolerations to apply to the pod |
-| distributor.volumeClaimTemplates | list | `[]` | volume claim templates to attach to replicas |
-| distributor.volumeMounts | list | `[]` | kubernetes volume mounts to apply to the container |
-| distributor.volumes | list | `[]` | kubernetes volumes to apply to the pod |
-| forwarders | list | `[]` | additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo and distributor.conf.ForwardTo lists. |
+| forwarders | list | `[]` | additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo list. |
 | fullnameOverride | string | `""` | overrides the full name of the helm chart |
 | gateway | object | `{"advertisedSFXListenerAddress":"$(POD_IP):18080","advertisedSFXRebalanceAddress":"$(POD_IP):2382","affinity":{},"conf":{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"},"containerPorts":[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}],"count":1,"livenessProbe":{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15},"nodeSelector":{},"readinessProbe":{},"resources":{},"tolerations":[],"volumeClaimTemplates":[],"volumeMounts":[],"volumes":[]}` | configurations for gateway nodes |
 | gateway.advertisedSFXListenerAddress | string | `"$(POD_IP):18080"` | is an environment variable that will be set in the gateway pod. It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
 | gateway.advertisedSFXRebalanceAddress | string | `"$(POD_IP):2382"` | is an environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluister.  By defaul it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
 | gateway.affinity | object | `{}` | kubernetes affinity configuriations to apply to the pod |
+| gateway.conf | object | `{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"}` | represents the SignalFx Smart Gateway's config file.  You can directly set additional configurations `--set gateway.conf.<GATEAY CONFIG KEY>=` |
 | gateway.conf.ForwardTo | list | `[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}]` | the gateway forwarders.  This list is merged with the forwarders list. |
 | gateway.conf.ForwardTo[0] | object | `{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}` | the default SignalFx forwarder |
 | gateway.conf.ForwardTo[0].AuthTokenEnvVar | string | `"SFX_AUTH_TOKEN"` | the environment variable to read for the SignalFx Access Token |
@@ -300,7 +261,7 @@ by the Helm chart.
 | image.repository | string | `"signalfx-smart-gateway"` | the container image to pull |
 | image.tag | string | `""` | the container image tag to pull (REQUIRED) |
 | ingress.enabled | bool | `false` |  |
-| listeners | list | `[{"ListenAddr":"0.0.0.0:18080","Name":"signalfxlistener","RemoveSpanTags":[],"Type":"signalfx"}]` | SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists. |
+| listeners | list | `[{"ListenAddr":"0.0.0.0:18080","Name":"signalfxlistener","RemoveSpanTags":[],"Type":"signalfx"}]` | SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom list. |
 | listeners[0] | object | `{"ListenAddr":"0.0.0.0:18080","Name":"signalfxlistener","RemoveSpanTags":[],"Type":"signalfx"}` | The default SiganlFx listener |
 | listeners[0].ListenAddr | string | `"0.0.0.0:18080"` | the address for the SignalFx Listener to listen on |
 | listeners[0].Name | string | `"signalfxlistener"` | the name of the SignalFx Listener |
