@@ -8,7 +8,7 @@ description: |
   designed to run within your environment, close to your application, and operate
   reliably and at scale.
 name: signalfx-smart-gateway
-version: 0.1.0 # The version of this helm chart
+version: 0.2.0 # The version of this helm chart
 keywords:
 - signalfx
 - tracing

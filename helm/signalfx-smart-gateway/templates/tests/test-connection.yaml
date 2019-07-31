@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args:  ['{{ include "signalfx-smart-gateway.fullname" . }}:{{ .Values.service.port }}/healthz']
+      args: ['{{ include "signalfx-smart-gateway.fullname" . }}:{{ .Values.service.port }}/healthz']
   restartPolicy: Never

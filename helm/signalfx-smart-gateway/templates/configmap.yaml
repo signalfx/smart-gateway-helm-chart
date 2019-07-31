@@ -1,6 +1,5 @@
 {{- range $key, $value := .Values }}{{ if (or (eq $key "gateway") (eq $key "distributor")) }}{{ with $value }}
 ---
-# distributor configmap
 apiVersion: v1
 kind: ConfigMap
 metadata:
