@@ -15,7 +15,7 @@ spec:
       signalfx-gateway-type: {{ $key }}
   {{- with .volumeClaimTemplates }}
   volumeClaimTemplates:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml . | trim | nindent 4 }}
   {{- end }}
   template:
     metadata:
@@ -27,30 +27,30 @@ spec:
 
       {{- with .nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml . | trim | nindent 8 }}
       {{- end }}
 
       {{- with .affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml . | trim | nindent 8 }}
       {{- end }}
 
       {{- with .tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml . | trim | nindent 8 }}
       {{- end }}
 
       volumes:
         - name: config
           configMap:
             name: {{ include "signalfx-smart-gateway.fullname" $ }}{{if (eq $key "distributor")}}-{{ $key }}{{ end }}
-        {{with .volumes }}
-        {{- toYaml . | nindent 8 }}
-        {{end }}
+        {{- with .volumes }}
+        {{- toYaml . | trim | nindent 8 }}
+        {{- end }}
 
       {{- if $.Values.image.pullSecrets }}
-      imagePullSecrets:
-        {{- toYaml $.Values.image.pullSecrets | nindent 8 }}
+      imagePullSecrets: 
+        {{- toYaml $.Values.image.pullSecrets | trim | nindent 8 }}
       {{- end }}
 
       containers:
@@ -76,37 +76,37 @@ spec:
             - name: SFX_SAMPLER_ADVERTISE_REBALANCE
               value: {{ .advertisedSFXRebalanceAddress }}
             {{- with .env }}
-            {{- toYaml . | indent 12 }}
+            {{- toYaml . | trim | indent 12 }}
             {{- end }}
           volumeMounts:
             - mountPath: /var/config/gateway
               name: config
             {{- with .volumeMounts }}
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml . | trim | nindent 12 }}
             {{- end }}
 
           {{- with .containerPorts }}
           # container ports to expose
           ports: 
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml . | trim | nindent 12 }}
           {{- end }}
 
           {{- with .livenessProbe }}
           # liveness probes
           livenessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml . | trim | nindent 12 }}
           {{- end }}
 
           {{- with .readinessProbe }}
           # readiness probes
           readinessProbe:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml . | trim | nindent 12 }}
           {{- end }}
 
           {{- with .resources }}
           # container resources
           resources:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml . | trim | nindent 12 }}
           {{- end }}
 ---
-{{- end }}{{ end }}{{ end }}
+{{- end }}{{ end }}{{ end -}}
