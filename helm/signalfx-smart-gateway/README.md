@@ -232,108 +232,90 @@ by the Helm chart.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| clusterName | string | "" | the name of the cluster (REQUIRED) |
-| distributor | object | {} | configurations for distributor nodes |
-| distributor.advertisedSFXListenerAddress | string | "$(POD_IP):18080" | is an environment variable that will be set in the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
-| distributor.advertisedSFXRebalanceAddress | string | "$(POD_IP):2382" | is an environment variable that will be set in the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluster.  By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
-| distributor.affinity | object | {} | kubernetes affinity configuriations to apply to the pod |
-| distributor.conf | object | {} |  |
-| distributor.conf.ForwardTo | list | [] | the gateway forwarders.  This list is merged with the forwarders list. |
-| distributor.conf.ForwardTo[0] | object | {} | the SignalFx Forwarder |
-| distributor.conf.ForwardTo[0].AuthTokenEnvVar | string | "SFX_AUTH_TOKEN" | the environment variable to read for the SignalFx Access Token |
-| distributor.conf.ForwardTo[0].Name | string | "signalfxforwarder" | the name of the SignalFx forwarder |
-| distributor.conf.ForwardTo[0].TraceSample | object | {} | the configurations for the trace distributor |
-| distributor.conf.ForwardTo[0].TraceSample.Distributor | bool | true | enables the distributor |
-| distributor.conf.ForwardTo[0].Type | string | "signalfx" | the type of the SignalFx forwarder |
-| distributor.conf.ListenFrom | list | [] | the gateway listeners.  This list is merged with the listeners list. |
-| distributor.conf.LogDir | string | "-" | the directory to log to.  A value of "-" will log to stdout |
-| distributor.containerPorts | list | [] | a list of kubernetes container port definitions apply to the container |
-| distributor.containerPorts[0] | object | {} |  |
-| distributor.containerPorts[0].containerPort | int | 18080 | the container port of the SignalFx Listener |
-| distributor.containerPorts[0].name | string | "sfx-listener" | the name of the SignalFx Listener containerPort |
-| distributor.containerPorts[0].protocol | string | "TCP" | the protocol of the SignalFx Listener |
-| distributor.containerPorts[1] | object | {} |  |
-| distributor.containerPorts[1].containerPort | int | 2382 | the container port of the SignalFx Forwarder's rebalance server |
-| distributor.containerPorts[1].name | string | "sfx-rebalance" | the name of the SignalFx Forwarder's rebalance containerPort |
-| distributor.containerPorts[1].protocol | string | "TCP" | the protocol of the SignalFx Forwarder's rebalance server |
-| distributor.count | int | 0 | number of gateway pods to deploy |
-| distributor.livenessProbe | object | {} | a kubernetes liveness probe to determine the health of the container |
-| distributor.livenessProbe.httpGet | object | {} |  |
-| distributor.livenessProbe.httpGet.path | string | "/healthz" |  |
-| distributor.livenessProbe.httpGet.port | string | "sfx-listener" |  |
-| distributor.livenessProbe.initialDelaySeconds | int | 15 |  |
-| distributor.nodeSelector | object | {} | kubernetes node selectors to apply to the pod |
-| distributor.readinessProbe | object | {} | a kubernetes readiness probe to determine when the container is ready |
-| distributor.resources | object | {} | kubernetes deployment resources |
-| distributor.tolerations | list | [] | kubernetes deployment tolerations to apply to the pod |
-| distributor.volumeClaimTemplates | list | [] | volume claim templates to attach to replicas |
-| distributor.volumeMounts | list | [] | kubernetes volume mounts to apply to the container |
-| distributor.volumes | list | [] | kubernetes volumes to apply to the pod |
-| forwarders | list | [] | additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo and distributor.conf.ForwardTo lists. |
-| fullnameOverride | string | "" | overrides the full name of the helm chart |
-| gateway | object | {} | configurations for gateway nodes |
-| gateway.advertisedSFXListenerAddress | string | "$(POD_IP):18080" | is an environment variable that will be set in the gateway pod. It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
-| gateway.advertisedSFXRebalanceAddress | string | "$(POD_IP):2382" | is an environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluister.  By defaul it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
-| gateway.affinity | object | {} | kubernetes affinity configuriations to apply to the pod |
-| gateway.conf | object | {} |  |
-| gateway.conf.ForwardTo | list | [] | the gateway forwarders.  This list is merged with the forwarders list. |
-| gateway.conf.ForwardTo[0] | object | {} | the default SignalFx forwarder |
-| gateway.conf.ForwardTo[0].AuthTokenEnvVar | string | "SFX_AUTH_TOKEN" | the environment variable to read for the SignalFx Access Token |
-| gateway.conf.ForwardTo[0].Name | string | "signalfxforwarder" | the name of the SignalFx forwarder |
-| gateway.conf.ForwardTo[0].TraceSample | object | {} | configurations for the SignalFx Smart Sampler |
-| gateway.conf.ForwardTo[0].TraceSample.BackupLocation | string | "/var/lib/gateway/data" | the location inside the container to back up sampling data |
-| gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress | string | "0.0.0.0:2382" | the address to listen on for cluster rebalances |
-| gateway.conf.ForwardTo[0].Type | string | "signalfx" | the type of the SignalFx forwarder |
-| gateway.conf.ListenFrom | list | [] | the gateway listeners.  This list is merged with the listeners list. |
-| gateway.conf.LogDir | string | "-" | the directory to log to.  A value of "-" will log to stdout |
-| gateway.containerPorts | list | [] | a list of kubernetes container port definitions apply to the container |
-| gateway.containerPorts[0] | object | {} |  |
-| gateway.containerPorts[0].containerPort | int | 18080 | the container port of the SignalFx Listener |
-| gateway.containerPorts[0].name | string | "sfx-listener" | the name of the SignalFx Listener containerPort |
-| gateway.containerPorts[0].protocol | string | "TCP" | the protocol of the SignalFx Listener |
-| gateway.containerPorts[1] | object | {} |  |
-| gateway.containerPorts[1].containerPort | int | 2382 | the container port of the SignalFx Forwarder's rebalance server |
-| gateway.containerPorts[1].name | string | "sfx-rebalance" | the name of the SignalFx Forwarder's rebalance containerPort |
-| gateway.containerPorts[1].protocol | string | "TCP" | the protocol of the SignalFx Forwarder's rebalance server |
-| gateway.count | int | 1 | number of gateway pods to deploy |
-| gateway.livenessProbe | object | {} | a kubernetes liveness probe to determine the health of the container |
-| gateway.livenessProbe.httpGet | object | {} |  |
-| gateway.livenessProbe.httpGet.path | string | "/healthz" |  |
-| gateway.livenessProbe.httpGet.port | string | "sfx-listener" |  |
-| gateway.livenessProbe.initialDelaySeconds | int | 15 |  |
-| gateway.nodeSelector | object | {} | kubernetes node selectors to apply to the pod |
-| gateway.readinessProbe | object | {} | a kubernetes readiness probe to determine when the container is ready |
-| gateway.resources | object | {} | kubernetes deployment resources |
-| gateway.tolerations | list | [] | kubernetes deployment tolerations to apply to the pod |
-| gateway.volumeClaimTemplates | list | [] | volume claim templates to attach to replicas |
-| gateway.volumeMounts | list | [] | kubernetes volume mounts to apply to the container |
-| gateway.volumes | list | [] | kubernetes volumes to apply to the pod |
-| image | object | {} | configurations for the deployed docker image |
-| image.pullPolicy | string | "IfNotPresent" | defines when to pull the image |
-| image.pullSecrets | list | [] | the image pull secrets of kubernetes secrets to use when pulling images  (REQUIRED) |
-| image.pullSecrets[0] | object | {} |  |
-| image.pullSecrets[0].name | string | "" |  |
-| image.repository | string | "signalfx-smart-gateway" | the container image to pull |
-| image.tag | string | "" | the container image tag to pull (REQUIRED) |
-| ingress | object | {} |  |
-| ingress.enabled | bool | false |  |
-| listeners | list | [] | SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists. |
-| listeners[0] | object | {} | The default SiganlFx listener |
-| listeners[0].ListenAddr | string | "0.0.0.0:18080" | the address for the SignalFx Listener to listen on |
-| listeners[0].Name | string | "signalfxlistener" | the name of the SignalFx Listener |
-| listeners[0].RemoveSpanTags | list | [] | the list of span tags for the SignalFx Listener to remove |
-| listeners[0].Type | string | "signalfx" | the type of the SignalFxListener |
-| nameOverride | string | "" | overrides the name of the helm chart |
-| service | object | {} | configurations for the service exposeing the gateway's SignalFx listener |
-| service.ports | list | [] | the ports to configure on the service |
-| service.ports[0] | object | {} |  |
-| service.ports[0].nameSuffix | string | "sfx-listener" | a suffix to apply to the port name |
-| service.ports[0].port | int | 18080 | the port to use on the service |
-| service.ports[0].protocol | string | "TCP" | the protocol of the service |
-| service.ports[0].targetPort | string | "sfx-listener" | the name of the container port to send requests to |
-| service.type | string | "ClusterIP" | the type of service |
-| signalFxAccessToken | string | "" | access token for SignalFx.  (REQUIRED) |
-| targetClusterAddresses | list | \<nil\> | a list of etcd client addresses to connect to (REQUIRED) |
+| clusterName | string | `""` | the name of the cluster (REQUIRED) |
+| distributor | object | `{"advertisedSFXListenerAddress":"$(POD_IP):18080","advertisedSFXRebalanceAddress":"$(POD_IP):2382","affinity":{},"conf":{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"Distributor":true},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"},"containerPorts":[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}],"count":0,"livenessProbe":{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15},"nodeSelector":{},"readinessProbe":{},"resources":{},"tolerations":[],"volumeClaimTemplates":[],"volumeMounts":[],"volumes":[]}` | configurations for distributor nodes |
+| distributor.advertisedSFXListenerAddress | string | `"$(POD_IP):18080"` | is an environment variable that will be set in the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
+| distributor.advertisedSFXRebalanceAddress | string | `"$(POD_IP):2382"` | is an environment variable that will be set in the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluster.  By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
+| distributor.affinity | object | `{}` | kubernetes affinity configuriations to apply to the pod |
+| distributor.conf.ForwardTo | list | `[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"Distributor":true},"Type":"signalfx"}]` | the gateway forwarders.  This list is merged with the forwarders list. |
+| distributor.conf.ForwardTo[0] | object | `{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"Distributor":true},"Type":"signalfx"}` | the SignalFx Forwarder |
+| distributor.conf.ForwardTo[0].AuthTokenEnvVar | string | `"SFX_AUTH_TOKEN"` | the environment variable to read for the SignalFx Access Token |
+| distributor.conf.ForwardTo[0].Name | string | `"signalfxforwarder"` | the name of the SignalFx forwarder |
+| distributor.conf.ForwardTo[0].TraceSample | object | `{"Distributor":true}` | the configurations for the trace distributor |
+| distributor.conf.ForwardTo[0].TraceSample.Distributor | bool | `true` | enables the distributor |
+| distributor.conf.ForwardTo[0].Type | string | `"signalfx"` | the type of the SignalFx forwarder |
+| distributor.conf.ListenFrom | list | `[]` | the gateway listeners.  This list is merged with the listeners list. |
+| distributor.conf.LogDir | string | `"-"` | the directory to log to.  A value of "-" will log to stdout |
+| distributor.containerPorts | list | `[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}]` | a list of kubernetes container port definitions apply to the container |
+| distributor.containerPorts[0].containerPort | int | `18080` | the container port of the SignalFx Listener |
+| distributor.containerPorts[0].name | string | `"sfx-listener"` | the name of the SignalFx Listener containerPort |
+| distributor.containerPorts[0].protocol | string | `"TCP"` | the protocol of the SignalFx Listener |
+| distributor.containerPorts[1].containerPort | int | `2382` | the container port of the SignalFx Forwarder's rebalance server |
+| distributor.containerPorts[1].name | string | `"sfx-rebalance"` | the name of the SignalFx Forwarder's rebalance containerPort |
+| distributor.containerPorts[1].protocol | string | `"TCP"` | the protocol of the SignalFx Forwarder's rebalance server |
+| distributor.count | int | `0` | number of gateway pods to deploy |
+| distributor.livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15}` | a kubernetes liveness probe to determine the health of the container |
+| distributor.nodeSelector | object | `{}` | kubernetes node selectors to apply to the pod |
+| distributor.readinessProbe | object | `{}` | a kubernetes readiness probe to determine when the container is ready |
+| distributor.resources | object | `{}` | kubernetes deployment resources |
+| distributor.tolerations | list | `[]` | kubernetes deployment tolerations to apply to the pod |
+| distributor.volumeClaimTemplates | list | `[]` | volume claim templates to attach to replicas |
+| distributor.volumeMounts | list | `[]` | kubernetes volume mounts to apply to the container |
+| distributor.volumes | list | `[]` | kubernetes volumes to apply to the pod |
+| forwarders | list | `[]` | additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo and distributor.conf.ForwardTo lists. |
+| fullnameOverride | string | `""` | overrides the full name of the helm chart |
+| gateway | object | `{"advertisedSFXListenerAddress":"$(POD_IP):18080","advertisedSFXRebalanceAddress":"$(POD_IP):2382","affinity":{},"conf":{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"},"containerPorts":[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}],"count":1,"livenessProbe":{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15},"nodeSelector":{},"readinessProbe":{},"resources":{},"tolerations":[],"volumeClaimTemplates":[],"volumeMounts":[],"volumes":[]}` | configurations for gateway nodes |
+| gateway.advertisedSFXListenerAddress | string | `"$(POD_IP):18080"` | is an environment variable that will be set in the gateway pod. It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
+| gateway.advertisedSFXRebalanceAddress | string | `"$(POD_IP):2382"` | is an environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluister.  By defaul it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes |
+| gateway.affinity | object | `{}` | kubernetes affinity configuriations to apply to the pod |
+| gateway.conf.ForwardTo | list | `[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}]` | the gateway forwarders.  This list is merged with the forwarders list. |
+| gateway.conf.ForwardTo[0] | object | `{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}` | the default SignalFx forwarder |
+| gateway.conf.ForwardTo[0].AuthTokenEnvVar | string | `"SFX_AUTH_TOKEN"` | the environment variable to read for the SignalFx Access Token |
+| gateway.conf.ForwardTo[0].Name | string | `"signalfxforwarder"` | the name of the SignalFx forwarder |
+| gateway.conf.ForwardTo[0].TraceSample | object | `{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"}` | configurations for the SignalFx Smart Sampler |
+| gateway.conf.ForwardTo[0].TraceSample.BackupLocation | string | `"/var/lib/gateway/data"` | the location inside the container to back up sampling data |
+| gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress | string | `"0.0.0.0:2382"` | the address to listen on for cluster rebalances |
+| gateway.conf.ForwardTo[0].Type | string | `"signalfx"` | the type of the SignalFx forwarder |
+| gateway.conf.ListenFrom | list | `[]` | the gateway listeners.  This list is merged with the listeners list. |
+| gateway.conf.LogDir | string | `"-"` | the directory to log to.  A value of "-" will log to stdout |
+| gateway.containerPorts | list | `[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}]` | a list of kubernetes container port definitions apply to the container |
+| gateway.containerPorts[0].containerPort | int | `18080` | the container port of the SignalFx Listener |
+| gateway.containerPorts[0].name | string | `"sfx-listener"` | the name of the SignalFx Listener containerPort |
+| gateway.containerPorts[0].protocol | string | `"TCP"` | the protocol of the SignalFx Listener |
+| gateway.containerPorts[1].containerPort | int | `2382` | the container port of the SignalFx Forwarder's rebalance server |
+| gateway.containerPorts[1].name | string | `"sfx-rebalance"` | the name of the SignalFx Forwarder's rebalance containerPort |
+| gateway.containerPorts[1].protocol | string | `"TCP"` | the protocol of the SignalFx Forwarder's rebalance server |
+| gateway.count | int | `1` | number of gateway pods to deploy |
+| gateway.livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15}` | a kubernetes liveness probe to determine the health of the container |
+| gateway.nodeSelector | object | `{}` | kubernetes node selectors to apply to the pod |
+| gateway.readinessProbe | object | `{}` | a kubernetes readiness probe to determine when the container is ready |
+| gateway.resources | object | `{}` | kubernetes deployment resources |
+| gateway.tolerations | list | `[]` | kubernetes deployment tolerations to apply to the pod |
+| gateway.volumeClaimTemplates | list | `[]` | volume claim templates to attach to replicas |
+| gateway.volumeMounts | list | `[]` | kubernetes volume mounts to apply to the container |
+| gateway.volumes | list | `[]` | kubernetes volumes to apply to the pod |
+| image | object | `{"pullPolicy":"IfNotPresent","pullSecrets":[{"name":""}],"repository":"signalfx-smart-gateway","tag":""}` | configurations for the deployed docker image |
+| image.pullPolicy | string | `"IfNotPresent"` | defines when to pull the image |
+| image.pullSecrets | list | `[{"name":""}]` | the image pull secrets of kubernetes secrets to use when pulling images  (REQUIRED) |
+| image.repository | string | `"signalfx-smart-gateway"` | the container image to pull |
+| image.tag | string | `""` | the container image tag to pull (REQUIRED) |
+| ingress.enabled | bool | `false` |  |
+| listeners | list | `[{"ListenAddr":"0.0.0.0:18080","Name":"signalfxlistener","RemoveSpanTags":[],"Type":"signalfx"}]` | SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom and distributor.conf.ListenFrom lists. |
+| listeners[0] | object | `{"ListenAddr":"0.0.0.0:18080","Name":"signalfxlistener","RemoveSpanTags":[],"Type":"signalfx"}` | The default SiganlFx listener |
+| listeners[0].ListenAddr | string | `"0.0.0.0:18080"` | the address for the SignalFx Listener to listen on |
+| listeners[0].Name | string | `"signalfxlistener"` | the name of the SignalFx Listener |
+| listeners[0].RemoveSpanTags | list | `[]` | the list of span tags for the SignalFx Listener to remove |
+| listeners[0].Type | string | `"signalfx"` | the type of the SignalFxListener |
+| nameOverride | string | `""` | overrides the name of the helm chart |
+| service | object | `{"ports":[{"nameSuffix":"sfx-listener","port":18080,"protocol":"TCP","targetPort":"sfx-listener"}],"type":"ClusterIP"}` | configurations for the service exposeing the gateway's SignalFx listener |
+| service.ports | list | `[{"nameSuffix":"sfx-listener","port":18080,"protocol":"TCP","targetPort":"sfx-listener"}]` | the ports to configure on the service |
+| service.ports[0].nameSuffix | string | `"sfx-listener"` | a suffix to apply to the port name |
+| service.ports[0].port | int | `18080` | the port to use on the service |
+| service.ports[0].protocol | string | `"TCP"` | the protocol of the service |
+| service.ports[0].targetPort | string | `"sfx-listener"` | the name of the container port to send requests to |
+| service.type | string | `"ClusterIP"` | the type of service |
+| signalFxAccessToken | string | `""` | access token for SignalFx.  (REQUIRED) |
+| targetClusterAddresses | list | `nil` | a list of etcd client addresses to connect to (REQUIRED) |
 
 [a]: https://github.com/coreos/etcd-operator
 [b]: https://github.com/helm/charts/tree/master/stable/etcd-operator
