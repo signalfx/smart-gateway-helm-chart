@@ -10,7 +10,7 @@ reliably and at scale.
 
 
 
-Current chart version is `0.2.0`
+Current chart version is `0.2.1`
 
 ## Quick Start
 

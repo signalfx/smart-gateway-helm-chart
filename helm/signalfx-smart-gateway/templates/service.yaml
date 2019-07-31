@@ -19,4 +19,8 @@ spec:
   selector:
     app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Values.distributor }}
     signalfx-gateway-type: {{if .Values.distributor.count }}distributor{{else}}gateway{{- end }}
+    {{- else }}
+    signalfx-gateway-type: gateway
+    {{- end }}
