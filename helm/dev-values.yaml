@@ -1,0 +1,15 @@
+# These are dev values that are required to install the helm chart.  We need to
+# utilize these when running `helm lint` or helm will return an error.
+signalFxAccessToken: "YOUR_ACCESS_TOKEN"
+clusterName: "YOUR_CLUSTER_NAME"
+image:
+  pullSecrets:
+    - name: YOUR_PULL_SECRET
+  tag: master
+  repository: quay.io/signalfx/gateway
+targetClusterAddresses:
+  - etcd-cluster-client:2379
+distributor:
+  count: 3
+gateway:
+  count: 3
