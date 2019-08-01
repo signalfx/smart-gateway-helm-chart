@@ -2,106 +2,105 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# nameOverride -- overrides the name of the helm chart
+# nameOverride -- Overrides the name of the Helm chart
 nameOverride: ""
-# fullnameOverride -- overrides the full name of the helm chart
+# fullnameOverride -- Overrides the full name of the Helm chart
 fullnameOverride: ""
 
-# image -- configurations for the deployed docker image
+# image -- Configurations for the docker image to be deployed
 image:
-  # image.pullPolicy -- defines when to pull the image
+  # image.pullPolicy -- The policy for pulling the image
   pullPolicy: IfNotPresent
-  # image.repository -- the container image to pull
-  repository: signalfx-smart-gateway
-  # image.tag -- the container image tag to pull (REQUIRED)
+  # image.repository -- The image to pull (REQUIRED)
+  repository: ""
+  # image.tag -- The image tag to pull (REQUIRED)
   tag: ""
-  # image.pullSecrets -- the image pull secrets of kubernetes secrets to use when pulling images  (REQUIRED)
+  # image.pullSecrets -- (list) The list of image Kubernetes Image Pull Secrets to use when pulling images
   pullSecrets:
-    - name: ""
 
-# signalFxAccessToken -- access token for SignalFx.  (REQUIRED)
+# signalFxAccessToken -- The SignalFx Access Token used to send Datapoints, Events, and Traces to SignalFx (REQUIRED)
 signalFxAccessToken: ""
 
-# clusterName -- the name of the cluster (REQUIRED)
+# clusterName -- The name of the SignalFx Smart Gateway cluster (REQUIRED)
 clusterName: ""
 
-# targetClusterAddresses -- (list) a list of etcd client addresses to connect to (REQUIRED)
+# targetClusterAddresses -- (list) A list of etcd client addresses to connect to (REQUIRED)
 targetClusterAddresses:
 
-# listeners -- SignalFx Gateway listener config objects.  These will be merged into the gateway.conf.ListenFrom list.
+# listeners -- SignalFx Smart Gateway listener config objects (These are merged into the `gateway.conf.ListenFrom` list)
 listeners: [
-  # listeners[0] -- The default SiganlFx listener
+  # listeners[0] -- The default SignalFx listener
   {
-      # listeners[0].Name -- the name of the SignalFx Listener
+      # listeners[0].Name -- The name of the SignalFx listener
       "Name": "signalfxlistener",
-      # listeners[0].Type -- the type of the SignalFxListener
+      # listeners[0].Type -- The type of the SignalFx listener
       "Type": "signalfx",
-      # listeners[0].ListenAddr -- the address for the SignalFx Listener to listen on
+      # listeners[0].ListenAddr -- The address to listen on for requests
       "ListenAddr": "0.0.0.0:18080",
-      # listeners[0].RemoveSpanTags -- the list of span tags for the SignalFx Listener to remove
+      # listeners[0].RemoveSpanTags -- The list of rules for excluding span tags
       "RemoveSpanTags": []
   }
 ]
 
-# forwarders -- additional SignalFx Gateway forwarder config objects.  These will be merged into the gateway.conf.ForwardTo list.
+# forwarders -- Additional SignalFx Smart Gateway forwarder config objects (These will be merged into the `gateway.conf.ForwardTo` list)
 forwarders: []
 
-# gateway -- configurations for gateway nodes
+# gateway -- Configurations for SignalFx Smart Gateway nodes
 gateway:
-  # gateway.count -- number of gateway pods to deploy
+  # gateway.count -- The number of SignalFx Smart Gateways to deploy
   count: 1
-  # gateway.advertisedSFXListenerAddress -- is an environment variable that will be set in the gateway pod. It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  # gateway.advertisedSFXListenerAddress -- An environment variable that will be set in the gateway pod. It is used to configure the SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to `$(POD_IP):<PORT>` which is filled in by Kubernetes.
   advertisedSFXListenerAddress: $(POD_IP):18080
-  # gateway.advertisedSFXRebalanceAddress -- is an environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluister.  By defaul it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
+  # gateway.advertisedSFXRebalanceAddress -- An environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured rebalance address in the cluster.  By default it is set to `$(POD_IP):<PORT>` which is filled in by Kubernetes.
   advertisedSFXRebalanceAddress: $(POD_IP):2382
-  # gateway.conf -- represents the SignalFx Smart Gateway's config file.  You can directly set additional configurations `--set gateway.conf.<GATEAY CONFIG KEY>=`
+  # gateway.conf -- The SignalFx Smart Gateway's config file.  You can directly set additional configurations by specifying their path like this: `--set gateway.conf.<GATEAY CONFIG KEY>=`.
   conf: 
-    # gateway.conf.LogDir -- the directory to log to.  A value of "-" will log to stdout
+    # gateway.conf.LogDir -- The directory to log to.  The SignalFx Smart Gateway will log to `stdout` when `gateway.conf.LogDir` is set to `-`.
     LogDir: "-"
-    # gateway.conf.ListenFrom -- the gateway listeners.  This list is merged with the listeners list.
+    # gateway.conf.ListenFrom -- The SignalFx Smart Gateway listeners.  This list is merged with the `listeners` list.
     ListenFrom: []
-    # gateway.conf.ForwardTo -- the gateway forwarders.  This list is merged with the forwarders list.
+    # gateway.conf.ForwardTo -- The SignalFx Smart Gateway forwarders.  This list is merged with the `forwarders` list.
     ForwardTo: [
-      # gateway.conf.ForwardTo[0] -- the default SignalFx forwarder
+      # gateway.conf.ForwardTo[0] -- The default SignalFx forwarder
       {
-        # gateway.conf.ForwardTo[0].Name -- the name of the SignalFx forwarder
+        # gateway.conf.ForwardTo[0].Name -- The name of the SignalFx forwarder
         "Name": "signalfxforwarder",
-        # gateway.conf.ForwardTo[0].Type -- the type of the SignalFx forwarder
+        # gateway.conf.ForwardTo[0].Type -- The type of the SignalFx forwarder
         "Type": "signalfx",
-        # gateway.conf.ForwardTo[0].AuthTokenEnvVar -- the environment variable to read for the SignalFx Access Token
+        # gateway.conf.ForwardTo[0].AuthTokenEnvVar -- The environment variable to read to configure the SignalFx Access Token
         "AuthTokenEnvVar": "SFX_AUTH_TOKEN",
-        # gateway.conf.ForwardTo[0].TraceSample -- configurations for the SignalFx Smart Sampler
+        # gateway.conf.ForwardTo[0].TraceSample -- Configurations for the SignalFx Smart Sampler
         "TraceSample": {
-          # gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress -- the address to listen on for cluster rebalances
+          # gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress -- The address to listen on for cluster rebalancing
           "ListenRebalanceAddress": "0.0.0.0:2382",
-          # gateway.conf.ForwardTo[0].TraceSample.BackupLocation -- the location inside the container to back up sampling data
+          # gateway.conf.ForwardTo[0].TraceSample.BackupLocation -- The location inside the container to back up sampling data
           "BackupLocation": "/var/lib/gateway/data"
         }
       }
     ]
-  # gateway.containerPorts -- a list of kubernetes container port definitions apply to the container
+  # gateway.containerPorts -- A list of Kubernetes container port definitions to apply to the container
   containerPorts:
-    # gateway.containerPorts[0].name -- the name of the SignalFx Listener containerPort
+    # gateway.containerPorts[0].name -- The name of the SignalFx listener container port
   - name: sfx-listener
-    # gateway.containerPorts[0].containerPort -- the container port of the SignalFx Listener
+    # gateway.containerPorts[0].containerPort -- The SignalFx listener port
     containerPort: 18080
-    # gateway.containerPorts[0].protocol -- the protocol of the SignalFx Listener
+    # gateway.containerPorts[0].protocol -- The protocol of the SignalFx listener
     protocol: TCP
-    # gateway.containerPorts[1].name -- the name of the SignalFx Forwarder's rebalance containerPort
+    # gateway.containerPorts[1].name -- The name of the SignalFx forwarder's rebalance port
   - name: sfx-rebalance
-    # gateway.containerPorts[1].containerPort -- the container port of the SignalFx Forwarder's rebalance server
+    # gateway.containerPorts[1].containerPort -- The port of the SignalFx Forwarder's rebalance server
     containerPort: 2382
-    # gateway.containerPorts[1].protocol -- the protocol of the SignalFx Forwarder's rebalance server
+    # gateway.containerPorts[1].protocol -- The protocol used by the SignalFx Forwarder's rebalance server
     protocol: TCP
-  # gateway.livenessProbe -- a kubernetes liveness probe to determine the health of the container
+  # gateway.livenessProbe -- A Kubernetes liveness probe to determine the health of the container
   livenessProbe:
     httpGet:
       path: /healthz
       port: sfx-listener
     initialDelaySeconds: 15
-  # gateway.readinessProbe -- a kubernetes readiness probe to determine when the container is ready
+  # gateway.readinessProbe -- A Kubernetes readiness probe used to determine when the container is ready
   readinessProbe: {}
-  # gateway.resources -- kubernetes deployment resources
+  # gateway.resources -- Kubernetes deployment resources
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
@@ -113,32 +112,32 @@ gateway:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-  # gateway.nodeSelector -- kubernetes node selectors to apply to the pod
+  # gateway.nodeSelector -- Kubernetes node selectors to apply to the pod
   nodeSelector: {}
-  # gateway.tolerations -- kubernetes deployment tolerations to apply to the pod
+  # gateway.tolerations -- Kubernetes deployment tolerations to apply to the pod
   tolerations: []
-  # gateway.affinity -- kubernetes affinity configuriations to apply to the pod
+  # gateway.affinity -- Kubernetes affinity configuriations to apply to the pod
   affinity: {}
-  # gateway.volumes -- kubernetes volumes to apply to the pod
+  # gateway.volumes -- Kubernetes volumes to apply to the pod
   volumes: []
-  # gateway.volumeMounts -- kubernetes volume mounts to apply to the container
+  # gateway.volumeMounts -- Kubernetes volume mounts to apply to the container
   volumeMounts: []
-  # gateway.volumeClaimTemplates -- volume claim templates to attach to replicas
+  # gateway.volumeClaimTemplates -- Volume claim templates to attach to replicas
   volumeClaimTemplates: []
 
-# service -- configurations for the service exposeing the gateway's SignalFx listener
+# service -- Configurations for the Kubernetes service exposing the SignalFx Smart Gateway's SignalFx listener
 service:
-  # service.type -- the type of service
+  # service.type -- The service type
   type: ClusterIP
-  # service.ports -- the ports to configure on the service
+  # service.ports -- Ports to configure on the service
   ports:
-      # service.ports[0].port -- the port to use on the service
+      # service.ports[0].port -- The port to use on the service
     - port: 18080
-      # service.ports[0].targetPort -- the name of the container port to send requests to
+      # service.ports[0].targetPort -- The name of the container port to send requests to
       targetPort: sfx-listener
-      # service.ports[0].protocol -- the protocol of the service
+      # service.ports[0].protocol -- The protocol of the service
       protocol: TCP
-      # service.ports[0].nameSuffix -- a suffix to apply to the port name
+      # service.ports[0].nameSuffix -- A suffix to apply to the port name
       nameSuffix: sfx-listener
 
 ingress:
