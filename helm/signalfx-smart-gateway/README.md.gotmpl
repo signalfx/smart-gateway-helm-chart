@@ -1,50 +1,31 @@
-SignalFx Smart Gateway
-======================
+Deploying the SignalFx Smart Gateway With Helm
+==============================================
 
-{{ template "chart.description" . }}
-
-
-{{ template "chart.versionLine" . }}
+The SignalFx Smart Gateway can be deployed in Kubernetes environments with
+[Helm][g] using the [signalfx/signalfx-smart-gateway][h] chart. The chart
+supports single instance deployments and multi-node cluster deployments. A
+Kubernetes service will be created as part of the deployment for sending
+datapoints, events, and traces to the Smart Gateways.
 
 ## Quick Start
 
-This Helm chart deploys a SignalFx Smart Gateway cluster. It requires an
-existing etcd cluster for the gateway nodes to connect to.
-
-### Setup an etcd Cluster
-
-- Install the [etcd-operator][a] Helm [chart][b]
-and configure the chart to setup RBAC resources for the operator
-
-```bash
-$ helm install \
---name etcd-operator \
---set customResources.createEtcdClusterCRD=true \
---set customResources.createBackupCRD=true \
---set customResources.createRestoreCRD=true \
-stable/etcd-operator
-```
-
-- Update the chart to enable the cluster. `cluster.enabled` is ignored on
-install.
-
-```bash
-$ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
-```
+The [signalfx/signalfx-smart-gateway][h] Helm chart deploys a SignalFx Smart
+Gateway cluster. It requires an existing etcd cluster for the gateway nodes to
+connect to.
 
 ### Build the SignalFx Smart Gateway Image
 
 Before installing the Helm chart, a SignalFx Smart Gateway image must be
 generated.
 
-1. [Download the SignalFx Smart Gateway binary][c]
-2. [Use the documented dockerfile to build the image][d]
+1. Download the SignalFx Smart Gateway [binary][c].
+2. Use the [Dockerfile][d] to build the image.
 3. Place the image in a registry accessible to the Kubernetes cluster where the
 Helm chart will be installed.
 
 ### Install the Helm Chart
 
-To use this chart with Helm, add our SignalFx Helm chart repository to Helm
+To use the chart with Helm, add our SignalFx Helm chart repository to Helm
 like this:
 
 ```bash
@@ -78,12 +59,20 @@ $ helm install signalfx/signalfx-smart-gateway \
 
 #### Installing A Cluster
 
+SignalFx Smart Gateway clusters require client access to an etcd cluster in
+order to coordinate instances within the cluster.  
+
+*See [Setting Up An etcd Cluster](#Setting-Up-An-etcd-Cluster)
+for information about deploying an etcd cluster with the [etcd-operator][a]
+Helm [chart][b].*
+
 For a cluster, be sure to set values for:
 - `signalFxAccessToken`
 - `clusterName`
 - `targetClusterAddresses`
 - `image.repository`
 - `image.tag`
+- `gateway.count`
 
 ```bash
 $ helm install signalfx/signalfx-smart-gateway \
@@ -97,6 +86,27 @@ $ helm install signalfx/signalfx-smart-gateway \
 
 A service will be created to forward requests to port `18080` on to the 
 gateways' SignalFx Listener.
+
+#### Setting Up An etcd Cluster
+
+- Install the [etcd-operator][a] Helm [chart][b]
+and configure the chart to setup RBAC resources for the operator
+
+```bash
+$ helm install \
+--name etcd-operator \
+--set customResources.createEtcdClusterCRD=true \
+--set customResources.createBackupCRD=true \
+--set customResources.createRestoreCRD=true \
+stable/etcd-operator
+```
+
+- Update the chart to enable the cluster. `cluster.enabled` is ignored on
+install.
+
+```bash
+$ helm upgrade --set cluster.enabled=true etcd-operator stable/etcd-operator
+```
 
 ## Persisting Sampling Data
 
@@ -133,7 +143,7 @@ gateway:
 ```
 
 The following snippet shows how to configure the preceding volume claim 
-template while installing the helm chart.
+template while installing the Helm chart.
 
 ```bash
 --set gateway.volumeClaimTemplates[0].metadata.name="gateway-backups" \
@@ -154,7 +164,7 @@ gateway:
 ```
 
 The following snippet shows how to configure the preceding volume mount while
-installing the helm chart.
+installing the Helm chart.
 
 ```bash
 --set gateway.volumeMounts[0].mountPath="/var/lib/gateway/data" \
@@ -182,7 +192,7 @@ into `gateway.conf.ClusterName`.
 #### Listeners
 The `listeners` configuration is a list of SignalFx Smart Gateway Listener
 configuration JSON objects. These listeners will be merged into the
-[values.yaml] lists `gateway.conf.ListenFrom`.  There is a default SignalFx
+[values.yaml] lists `gateway.conf.ListenFrom`. There is a default SignalFx
 Listener configuration stored in `listeners[0]` and it is configured to listen
 on port `18080`. Please refer to the Listener [documentation][e] for more
 information about Listeners.
@@ -190,8 +200,8 @@ information about Listeners.
 #### Forwarders
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
 configuration JSON objects. These forwarders will be merged into the
-[values.yaml] list `gateway.conf.ForwardTo`.  Please note this difference in
-configuration.  While the default SignalFx Listener is under `listeners[0]`,
+[values.yaml] list `gateway.conf.ForwardTo`. Please note this difference in
+configuration. While the default SignalFx Listener is under `listeners[0]`,
 but the default SignalFx Forwarder is under `gateway.conf.ForwardTo`.
 
 #### Target Cluster Addresses
@@ -219,4 +229,6 @@ ignored and set intelligently by the Helm chart.
 [d]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#building-a-docker-image
 [e]: https://github.com/signalfx/integrations/tree/master/gateway#listenfrom
 [f]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
-[values.yaml]: ./values.yaml
+[g]: https://github.com/helm/helm
+[h]: https://github.com/signalfx/smart-gateway-helm-chart/tree/master/helm/signalfx-smart-gateway
+[values.yaml]: https://github.com/signalfx/smart-gateway-helm-chart/blob/master/helm/signalfx-smart-gateway/values.yaml
