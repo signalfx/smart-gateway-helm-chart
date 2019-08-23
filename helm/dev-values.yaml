@@ -21,6 +21,8 @@ distributor:
   advertisedSFXRebalanceAddress: $(POD_IP):2382
   # distributor.conf -- represents the SignalFx Smart Gateway's config file.
   conf:
+    # gateway.conf.InternalMetricsListenerAddress -- The address and port to serve metrics about the distributor
+    InternalMetricsListenerAddress: "0.0.0.0:2383"
     # distributor.conf.LogDir -- the directory to log to.  A value of "-" will log to stdout
     LogDir: "-"
     # distributor.conf.ListenFrom -- the gateway listeners.  This list is merged with the listeners list.
@@ -55,6 +57,12 @@ distributor:
       # distributor.containerPorts[1].containerPort -- the container port of the SignalFx Forwarder's rebalance server
       containerPort: 2382
       # distributor.containerPorts[1].protocol -- the protocol of the SignalFx Forwarder's rebalance server
+      protocol: TCP
+    # distributor.containerPorts[2].name -- The name of the internal metrics server
+    - name: sfx-internal-metrics
+      # distributor.containerPorts[2].containerPort -- The port of the internal metrics server
+      containerPort: 2383
+      # distributor.containerPorts[2].protocol -- The protocol used by the internal metrics server
       protocol: TCP
   # distributor.livenessProbe -- a kubernetes liveness probe to determine the health of the container
   livenessProbe:

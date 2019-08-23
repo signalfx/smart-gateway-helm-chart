@@ -19,6 +19,9 @@ spec:
   {{- end }}
   template:
     metadata:
+      annotations:
+        agent.signalfx.com/monitorType.2383: internal-metrics
+        agent.signalfx.com/config.2383.path: /internal-metrics
       labels:
         app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
         app.kubernetes.io/instance: {{ $.Release.Name }}
