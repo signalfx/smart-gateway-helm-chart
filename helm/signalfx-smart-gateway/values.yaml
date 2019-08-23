@@ -53,6 +53,12 @@ gateway:
   advertisedSFXListenerAddress: $(POD_IP):18080
   # gateway.advertisedSFXRebalanceAddress -- An environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured rebalance address in the cluster.  By default it is set to `$(POD_IP):<PORT>` which is filled in by Kubernetes.
   advertisedSFXRebalanceAddress: $(POD_IP):2382
+  # gateway.annotations -- A list of key/value objects representing annotations to apply to the pods.
+  annotations:
+    # gateway.annotations[0] -- An annotation to configure the internal-metrics monitor on the SignalFx Smart Agent.
+    - agent.signalfx.com/monitorType.2383: internal-metrics
+    # gateway.annotations[1] -- An annotation to configure the path on the SignalFx Smart Agent's internal-metrics monitor.
+    - agent.signalfx.com/config.2383.path: /internal-metrics
   # gateway.conf -- The SignalFx Smart Gateway's config file.  You can directly set additional configurations by specifying their path like this: `--set gateway.conf.<GATEAY CONFIG KEY>=`.
   conf:
     # gateway.conf.InternalMetricsListenerAddress -- The address and port to serve metrics about the gateway

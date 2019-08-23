@@ -19,6 +19,12 @@ distributor:
   advertisedSFXListenerAddress: $(POD_IP):18080
   # distributor.advertisedSFXRebalanceAddress -- is an environment variable that will be set in the distributor pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured RebalanceAddress in the cluster.  By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
   advertisedSFXRebalanceAddress: $(POD_IP):2382
+  # distributor.annotations -- A list of key/value objects representing annotations to apply to the pods.
+  annotations:
+    # distributor.annotations[0] -- An annotation to configure the internal-metrics monitor on the SignalFx Smart Agent.
+    - agent.signalfx.com/monitorType.2383: internal-metrics
+    # distributor.annotations[1] -- An annotation to configure the path on the SignalFx Smart Agent's internal-metrics monitor.
+    - agent.signalfx.com/config.2383.path: /internal-metrics
   # distributor.conf -- represents the SignalFx Smart Gateway's config file.
   conf:
     # gateway.conf.InternalMetricsListenerAddress -- The address and port to serve metrics about the distributor
