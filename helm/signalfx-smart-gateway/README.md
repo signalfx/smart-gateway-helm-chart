@@ -185,11 +185,13 @@ For convenience, there are a few top level configurations in the [values.yaml]
 to insert and configure Forwarders and Listeners for the Smart Gateway.
 
 #### ClusterName
+
 The SignalFx Smart Gateway must all use the same cluster name. As a convenience
 there is a top level configuration called `clusterName`. It will be inserted
 into `gateway.conf.ClusterName`.
 
 #### Listeners
+
 The `listeners` configuration is a list of SignalFx Smart Gateway Listener
 configuration JSON objects. These listeners will be merged into the
 [values.yaml] lists `gateway.conf.ListenFrom`. There is a default SignalFx
@@ -198,6 +200,7 @@ on port `18080`. Please refer to the Listener [documentation][e] for more
 information about Listeners.
 
 #### Forwarders
+
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
 configuration JSON objects. These forwarders will be merged into the
 [values.yaml] list `gateway.conf.ForwardTo`. Please note this difference in
@@ -205,11 +208,32 @@ configuration. While the default SignalFx Listener is under `listeners[0]`,
 but the default SignalFx Forwarder is under `gateway.conf.ForwardTo`.
 
 #### Target Cluster Addresses
+
 The `targetClusterAddresses` configuration is a list of etcd client addresses
 for the gateways to connect to etcd. This configuration will be inserted into
 `gateway.conf.TargetClusterAddresses`.
 
+#### Monitoring Via SignalFx Smart Agent
+
+This helm chart configures an internal metrics server on the Smart Gateway that
+the SignalFx Smart Agent can scrape for metrics about the Smart Gateway.
+
+##### Smart Gateway
+
+`gateway.conf.InternalMetricsListenerAddress` turns on the internal metrics
+server on the Smart Gateway.  By default metrics are served on port 2383.  The
+port is exposed on the container via `gateway.containerPorts[2]`.
+
+##### Smart Agent
+
+When a SignalFx Smart Agent is configured with the [Kubernetes Observer][i] it
+will discover Smart Gateway instances and configure the internal-metrics monitor
+according to the annotations on the pod.  This is driven by two default
+Kubernetes annotations added by this helm chart to the Smart Gateway pod.  See
+the helm chart config value `gateway.annotations` for more information.
+
 #### gateway.conf
+
 You'll notice that there is a configuration called `gateway.conf` that is a JSON
 config objects representing plain SignalFx Smart Gateway config. It is passed in
 directly so additional gateway configurations that are not in the
@@ -228,11 +252,14 @@ ignored and set intelligently by the Helm chart.
 | clusterName | string | `""` | The name of the SignalFx Smart Gateway cluster (REQUIRED) |
 | forwarders | list | `[]` | Additional SignalFx Smart Gateway forwarder config objects (These will be merged into the `gateway.conf.ForwardTo` list) |
 | fullnameOverride | string | `""` | Overrides the full name of the Helm chart |
-| gateway | object | `{"advertisedSFXListenerAddress":"$(POD_IP):18080","advertisedSFXRebalanceAddress":"$(POD_IP):2382","affinity":{},"conf":{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"},"containerPorts":[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}],"count":1,"livenessProbe":{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15},"nodeSelector":{},"readinessProbe":{},"resources":{},"tolerations":[],"volumeClaimTemplates":[],"volumeMounts":[],"volumes":[]}` | Configurations for SignalFx Smart Gateway nodes |
+| gateway | object | `{"advertisedSFXListenerAddress":"$(POD_IP):18080","advertisedSFXRebalanceAddress":"$(POD_IP):2382","affinity":{},"annotations":[{"agent.signalfx.com/monitorType.2383":"internal-metrics"},{"agent.signalfx.com/config.2383.path":"/internal-metrics"}],"conf":{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"InternalMetricsListenerAddress":"0.0.0.0:2383","ListenFrom":[],"LogDir":"-"},"containerPorts":[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"},{"containerPort":2383,"name":"sfx-internal-metrics","protocol":"TCP"}],"count":1,"livenessProbe":{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15},"nodeSelector":{},"readinessProbe":{},"resources":{},"tolerations":[],"volumeClaimTemplates":[],"volumeMounts":[],"volumes":[]}` | Configurations for SignalFx Smart Gateway nodes |
 | gateway.advertisedSFXListenerAddress | string | `"$(POD_IP):18080"` | An environment variable that will be set in the gateway pod. It is used to configure the SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to `$(POD_IP):<PORT>` which is filled in by Kubernetes. |
 | gateway.advertisedSFXRebalanceAddress | string | `"$(POD_IP):2382"` | An environment variable that will be set in the gateway pod.  It is used to configure the SignalFx Smart Samplers to advertise their configured rebalance address in the cluster.  By default it is set to `$(POD_IP):<PORT>` which is filled in by Kubernetes. |
 | gateway.affinity | object | `{}` | Kubernetes affinity configuriations to apply to the pod |
-| gateway.conf | object | `{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"ListenFrom":[],"LogDir":"-"}` | The SignalFx Smart Gateway's config file.  You can directly set additional configurations by specifying their path like this: `--set gateway.conf.<GATEAY CONFIG KEY>=`. |
+| gateway.annotations | list | `[{"agent.signalfx.com/monitorType.2383":"internal-metrics"},{"agent.signalfx.com/config.2383.path":"/internal-metrics"}]` | A list of key/value objects representing annotations to apply to the pods. |
+| gateway.annotations[0] | object | `{"agent.signalfx.com/monitorType.2383":"internal-metrics"}` | An annotation to configure the internal-metrics monitor on the SignalFx Smart Agent. |
+| gateway.annotations[1] | object | `{"agent.signalfx.com/config.2383.path":"/internal-metrics"}` | An annotation to configure the path on the SignalFx Smart Agent's internal-metrics monitor. |
+| gateway.conf | object | `{"ForwardTo":[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}],"InternalMetricsListenerAddress":"0.0.0.0:2383","ListenFrom":[],"LogDir":"-"}` | The SignalFx Smart Gateway's config file.  You can directly set additional configurations by specifying their path like this: `--set gateway.conf.<GATEAY CONFIG KEY>=`. |
 | gateway.conf.ForwardTo | list | `[{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}]` | The SignalFx Smart Gateway forwarders.  This list is merged with the `forwarders` list. |
 | gateway.conf.ForwardTo[0] | object | `{"AuthTokenEnvVar":"SFX_AUTH_TOKEN","Name":"signalfxforwarder","TraceSample":{"BackupLocation":"/var/lib/gateway/data","ListenRebalanceAddress":"0.0.0.0:2382"},"Type":"signalfx"}` | The default SignalFx forwarder |
 | gateway.conf.ForwardTo[0].AuthTokenEnvVar | string | `"SFX_AUTH_TOKEN"` | The environment variable to read to configure the SignalFx Access Token |
@@ -241,15 +268,19 @@ ignored and set intelligently by the Helm chart.
 | gateway.conf.ForwardTo[0].TraceSample.BackupLocation | string | `"/var/lib/gateway/data"` | The location inside the container to back up sampling data |
 | gateway.conf.ForwardTo[0].TraceSample.ListenRebalanceAddress | string | `"0.0.0.0:2382"` | The address to listen on for cluster rebalancing |
 | gateway.conf.ForwardTo[0].Type | string | `"signalfx"` | The type of the SignalFx forwarder |
+| gateway.conf.InternalMetricsListenerAddress | string | `"0.0.0.0:2383"` | The address and port to serve metrics about the gateway |
 | gateway.conf.ListenFrom | list | `[]` | The SignalFx Smart Gateway listeners.  This list is merged with the `listeners` list. |
 | gateway.conf.LogDir | string | `"-"` | The directory to log to.  The SignalFx Smart Gateway will log to `stdout` when `gateway.conf.LogDir` is set to `-`. |
-| gateway.containerPorts | list | `[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"}]` | A list of Kubernetes container port definitions to apply to the container |
+| gateway.containerPorts | list | `[{"containerPort":18080,"name":"sfx-listener","protocol":"TCP"},{"containerPort":2382,"name":"sfx-rebalance","protocol":"TCP"},{"containerPort":2383,"name":"sfx-internal-metrics","protocol":"TCP"}]` | A list of Kubernetes container port definitions to apply to the container |
 | gateway.containerPorts[0].containerPort | int | `18080` | The SignalFx listener port |
 | gateway.containerPorts[0].name | string | `"sfx-listener"` | The name of the SignalFx listener container port |
 | gateway.containerPorts[0].protocol | string | `"TCP"` | The protocol of the SignalFx listener |
 | gateway.containerPorts[1].containerPort | int | `2382` | The port of the SignalFx Forwarder's rebalance server |
 | gateway.containerPorts[1].name | string | `"sfx-rebalance"` | The name of the SignalFx forwarder's rebalance port |
 | gateway.containerPorts[1].protocol | string | `"TCP"` | The protocol used by the SignalFx Forwarder's rebalance server |
+| gateway.containerPorts[2].containerPort | int | `2383` | The port of the internal metrics server |
+| gateway.containerPorts[2].name | string | `"sfx-internal-metrics"` | The name of the internal metrics server |
+| gateway.containerPorts[2].protocol | string | `"TCP"` | The protocol used by the internal metrics server |
 | gateway.count | int | `1` | The number of SignalFx Smart Gateways to deploy |
 | gateway.livenessProbe | object | `{"httpGet":{"path":"/healthz","port":"sfx-listener"},"initialDelaySeconds":15}` | A Kubernetes liveness probe to determine the health of the container |
 | gateway.nodeSelector | object | `{}` | Kubernetes node selectors to apply to the pod |
@@ -290,4 +321,5 @@ ignored and set intelligently by the Helm chart.
 [f]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
 [g]: https://github.com/helm/helm
 [h]: https://github.com/signalfx/smart-gateway-helm-chart/tree/master/helm/signalfx-smart-gateway
+[i]: https://docs.signalfx.com/en/latest/integrations/agent/kubernetes-setup.html#observers
 [values.yaml]: https://github.com/signalfx/smart-gateway-helm-chart/blob/master/helm/signalfx-smart-gateway/values.yaml

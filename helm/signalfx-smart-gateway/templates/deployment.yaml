@@ -19,6 +19,11 @@ spec:
   {{- end }}
   template:
     metadata:
+      {{- with .annotations }}
+      annotations:
+        {{- range . }}{{range $key, $val := .}}
+        {{$key}}: {{$val}}{{end}}{{end}}
+      {{- end }}
       labels:
         app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
         app.kubernetes.io/instance: {{ $.Release.Name }}
