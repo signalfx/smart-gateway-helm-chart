@@ -215,7 +215,7 @@ for the gateways to connect to etcd. This configuration will be inserted into
 
 #### Monitoring Via SignalFx Smart Agent
 
-This helm chart configures an internal metrics server on the Smart Gateway. That
+This helm chart configures an internal metrics server on the Smart Gateway that
 the SignalFx Smart Agent can scrape for metrics about the Smart Gateway.
 
 ##### Smart Gateway
