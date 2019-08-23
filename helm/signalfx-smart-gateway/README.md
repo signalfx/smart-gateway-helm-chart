@@ -185,11 +185,13 @@ For convenience, there are a few top level configurations in the [values.yaml]
 to insert and configure Forwarders and Listeners for the Smart Gateway.
 
 #### ClusterName
+
 The SignalFx Smart Gateway must all use the same cluster name. As a convenience
 there is a top level configuration called `clusterName`. It will be inserted
 into `gateway.conf.ClusterName`.
 
 #### Listeners
+
 The `listeners` configuration is a list of SignalFx Smart Gateway Listener
 configuration JSON objects. These listeners will be merged into the
 [values.yaml] lists `gateway.conf.ListenFrom`. There is a default SignalFx
@@ -198,6 +200,7 @@ on port `18080`. Please refer to the Listener [documentation][e] for more
 information about Listeners.
 
 #### Forwarders
+
 The `forwarders` configuration is a list of SignalFx Smart Gateway Forwarders
 configuration JSON objects. These forwarders will be merged into the
 [values.yaml] list `gateway.conf.ForwardTo`. Please note this difference in
@@ -205,11 +208,32 @@ configuration. While the default SignalFx Listener is under `listeners[0]`,
 but the default SignalFx Forwarder is under `gateway.conf.ForwardTo`.
 
 #### Target Cluster Addresses
+
 The `targetClusterAddresses` configuration is a list of etcd client addresses
 for the gateways to connect to etcd. This configuration will be inserted into
 `gateway.conf.TargetClusterAddresses`.
 
+#### Monitoring Via SignalFx Smart Agent
+
+This helm chart configures an internal metrics server on the Smart Gateway. That
+the SignalFx Smart Agent can scrape for metrics about the Smart Gateway.
+
+##### Smart Gateway
+
+`gateway.conf.InternalMetricsListenerAddress` turns on the internal metrics
+server on the Smart Gateway.  By default metrics are served on port 2383.  The
+port is exposed on the container via `gateway.containerPorts[2]`.
+
+##### Smart Agent
+
+When a SignalFx Smart Agent is configured with the [Kubernetes Observer][i] it
+will discover Smart Gateway instances and configure the internal-metrics monitor
+according to the annotations on the pod.  This is driven by two default
+Kubernetes annotations added by this helm chart to the Smart Gateway pod.  See
+the helm chart config value `gateway.annotations` for more information.
+
 #### gateway.conf
+
 You'll notice that there is a configuration called `gateway.conf` that is a JSON
 config objects representing plain SignalFx Smart Gateway config. It is passed in
 directly so additional gateway configurations that are not in the
@@ -297,4 +321,5 @@ ignored and set intelligently by the Helm chart.
 [f]: https://docs.signalfx.com/en/latest/apm/apm-deployment/smart-gateway.html#install-and-configure-the-smart-gateway
 [g]: https://github.com/helm/helm
 [h]: https://github.com/signalfx/smart-gateway-helm-chart/tree/master/helm/signalfx-smart-gateway
+[i]: https://docs.signalfx.com/en/latest/integrations/agent/kubernetes-setup.html#observers
 [values.yaml]: https://github.com/signalfx/smart-gateway-helm-chart/blob/master/helm/signalfx-smart-gateway/values.yaml
