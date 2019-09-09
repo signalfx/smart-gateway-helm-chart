@@ -22,7 +22,7 @@ spec:
       {{- with .annotations }}
       annotations:
         {{- range . }}{{range $key, $val := .}}
-        {{$key}}: {{$val}}{{end}}{{end}}
+        {{$key}}: {{toJson $val}}{{end}}{{end}}
       {{- end }}
       labels:
         app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
