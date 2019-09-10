@@ -55,14 +55,18 @@ gateway:
   advertisedSFXRebalanceAddress: $(POD_IP):2382
   # gateway.annotations -- A list of key/value objects representing annotations to apply to the pods.
   annotations:
-    # gateway.annotations[0] -- An annotation to configure the internal-metrics monitor on the SignalFx Smart Agent.
+    # gateway.annotations[0] -- An annotation to configure the internal-metrics monitor on the SignalFx Smart Agent to monitor the Smart Gateway.
     - agent.signalfx.com/monitorType.2383: internal-metrics
-    # gateway.annotations[1] -- An annotation to configure the path on the SignalFx Smart Agent's internal-metrics monitor.
+    # gateway.annotations[1] -- An annotation to configure the path on the SignalFx Smart Agent's internal-metrics monitor to scrape metrics from the Smart Gateway.
     - agent.signalfx.com/config.2383.path: /internal-metrics
+    # gateway.annotations[2] -- An annotation to configure the SignalFx Smart Agent's internal-metrics monitor to overwrite the host dimension resolved by the SignalFx Smart Gateway.
+    - agent.signalfx.com/config.2383.dimensionTransformations: '{host: ""}'
   # gateway.conf -- The SignalFx Smart Gateway's config file.  You can directly set additional configurations by specifying their path like this: `--set gateway.conf.<GATEAY CONFIG KEY>=`.
   conf:
     # gateway.conf.InternalMetricsListenerAddress -- The address and port to serve metrics about the gateway
     InternalMetricsListenerAddress: "0.0.0.0:2383"
+    # gateway.conf.EmitDebugMetrics -- turn debug level metrics about the Smart Gateway on or off.
+    EmitDebugMetrics: false
     # gateway.conf.LogDir -- The directory to log to.  The SignalFx Smart Gateway will log to `stdout` when `gateway.conf.LogDir` is set to `-`.
     LogDir: "-"
     # gateway.conf.ListenFrom -- The SignalFx Smart Gateway listeners.  This list is merged with the `listeners` list.
@@ -101,7 +105,7 @@ gateway:
     # gateway.containerPorts[1].protocol -- The protocol used by the SignalFx Forwarder's rebalance server
     protocol: TCP
     # gateway.containerPorts[2].name -- The name of the internal metrics server
-  - name: sfx-internal-metrics
+  - name: sfx-int-metrics
     # gateway.containerPorts[2].containerPort -- The port of the internal metrics server
     containerPort: 2383
     # gateway.containerPorts[2].protocol -- The protocol used by the internal metrics server
