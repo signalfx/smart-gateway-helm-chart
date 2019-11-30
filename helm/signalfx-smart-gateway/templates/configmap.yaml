@@ -15,7 +15,7 @@ data:
       {{ else }}
       "ClusterName": {{ toJson $.Values.clusterName}},
       {{- end }}
-      {{- range $k, $v := .conf}}{{ if not (eq $k "Listeners" "Forwarders" "TargetClusterAddresses" "ClusterName" "ClusterOperation")}}
+      {{- range $k, $v := .conf}}{{ if not (eq $k "ListenFrom" "ForwardTo" "TargetClusterAddresses" "ClusterName" "ClusterOperation")}}
       "{{ $k }}": {{ toJson $v }},
       {{- end }}{{ end }}
       {{- if (or (and (eq $key "gateway") (gt (int .count) 1)) (and (eq $key "distributor") (gt (int .count) 0))) }}
