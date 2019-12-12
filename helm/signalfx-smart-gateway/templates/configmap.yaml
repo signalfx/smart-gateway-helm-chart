@@ -46,6 +46,11 @@ data:
         {{- if $index}},{{- end }}
         {{toJson $forwarder}}
         {{- end }}
+        {{- if $.Values.forwarders }},{{- end }}
+        {{- range $index, $forwarder := $.Values.forwarders }}
+        {{- if $index}},{{- end }}
+        {{toJson $forwarder}}
+        {{- end }}
         {{- else }}
         {{- range $index, $forwarder := $.Values.forwarders }}
         {{- if $index}},{{- end }}
