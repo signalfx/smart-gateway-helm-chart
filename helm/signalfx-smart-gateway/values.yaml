@@ -47,6 +47,8 @@ forwarders: []
 
 # gateway -- Configurations for SignalFx Smart Gateway nodes
 gateway:
+  # gateway.configMountPoint -- the config map mount point for the pod
+  configMountPoint: /var/lib/gateway/etc
   # gateway.count -- The number of SignalFx Smart Gateways to deploy
   count: 1
   # gateway.advertisedSFXListenerAddress -- An environment variable that will be set in the gateway pod. It is used to configure the SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to `$(POD_IP):<PORT>` which is filled in by Kubernetes.

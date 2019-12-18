@@ -85,7 +85,7 @@ spec:
             {{- toYaml . | trim | indent 12 }}
             {{- end }}
           volumeMounts:
-            - mountPath: /var/config/gateway
+            - mountPath: {{ .configMountPoint }}
               name: config
             {{- with .volumeMounts }}
             {{- toYaml . | trim | nindent 12 }}
