@@ -15,7 +15,7 @@ data:
       {{ else }}
       "ClusterName": {{ toJson $.Values.clusterName}},
       {{- end }}
-      {{- range $k, $v := .conf}}{{ if not (eq $k "Listeners" "Forwarders" "TargetClusterAddresses" "ClusterName" "ClusterOperation")}}
+      {{- range $k, $v := .conf}}{{ if not (eq $k "ListenFrom" "ForwardTo" "TargetClusterAddresses" "ClusterName" "ClusterOperation")}}
       "{{ $k }}": {{ toJson $v }},
       {{- end }}{{ end }}
       {{- if (or (and (eq $key "gateway") (gt (int .count) 1)) (and (eq $key "distributor") (gt (int .count) 0))) }}
@@ -28,26 +28,30 @@ data:
       {{- end }}
       {{- end }}
       "ListenFrom": [
-        {{- if .conf.ListenFrom }}
-        {{- range $index, $listener := .conf.ListenFrom }}
-        {{- if $index}},{{- end }}
+        {{- if $.Values.listeners }}
+        {{- range $index, $listener := $.Values.listeners }}
+        {{- if $index }},{{- end }}
         {{toJson $listener}}
         {{- end }}
-        {{- else }}
-        {{- range $index, $listener := $.Values.listeners }}
-        {{- if $index}},{{- end }}
+        {{- end }}
+        {{- if .conf.ListenFrom}}
+        {{- if $.Values.listeners}},{{end}}
+        {{- range $index, $listener := .conf.ListenFrom }}
+        {{- if $index }},{{- end }}
         {{toJson $listener}}
         {{- end }}
         {{- end }}
       ],
       "ForwardTo": [
-        {{- if .conf.ForwardTo }}
-        {{- range $index, $forwarder := .conf.ForwardTo }}
+        {{- if $.Values.forwarders }}
+        {{- range $index, $forwarder := $.Values.forwarders }}
         {{- if $index}},{{- end }}
         {{toJson $forwarder}}
         {{- end }}
-        {{- else }}
-        {{- range $index, $forwarder := $.Values.forwarders }}
+        {{- end }}
+        {{- if .conf.ForwardTo}}
+        {{- if $.Values.forwarders}},{{end}}
+        {{- range $index, $forwarder := .conf.ForwardTo }}
         {{- if $index}},{{- end }}
         {{toJson $forwarder}}
         {{- end }}

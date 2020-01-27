@@ -13,6 +13,7 @@ spec:
       app.kubernetes.io/name: {{ include "signalfx-smart-gateway.name" $ }}
       app.kubernetes.io/instance: {{ $.Release.Name }}
       signalfx-gateway-type: {{ $key }}
+  serviceName: {{ include "signalfx-smart-gateway.fullname" $ }}
   {{- with .volumeClaimTemplates }}
   volumeClaimTemplates:
     {{- toYaml . | trim | nindent 4 }}
@@ -84,7 +85,7 @@ spec:
             {{- toYaml . | trim | indent 12 }}
             {{- end }}
           volumeMounts:
-            - mountPath: /var/config/gateway
+            - mountPath: {{ .configMountPoint }}
               name: config
             {{- with .volumeMounts }}
             {{- toYaml . | trim | nindent 12 }}

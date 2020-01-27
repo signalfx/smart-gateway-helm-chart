@@ -13,6 +13,8 @@ gateway:
   count: 3
 # distributor -- configurations for distributor nodes
 distributor:
+  # distributor.configMountPoint -- the config map mount point for the pod
+  configMountPoint: /var/lib/gateway/etc
   # distributor.count -- number of gateway pods to deploy
   count: 3
   # distributor.advertisedSFXListenerAddress -- is an environment variable that will be set in the distributor pod.  It is used to configure SignalFx Smart Samplers to advertise their configured SignalFx Listener in the cluster. By default it is set to the $(POD_IP):<PORT> where this config specifies the port, and the "$(POD_IP)" is filled in by kubernetes
